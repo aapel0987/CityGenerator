@@ -48,16 +48,36 @@ def gen_household_size():
 #		race, gender, age, and orientation bay be related to the root character. NOTE: This character may not be added to the final household, representing a disceased character
 # All subsequent characters are derived from the first two characters. These are usually children, but may be grandparents or siblings of the first two characters
 
-	
-	
+def genRootCharacter():
+	return Character()
+
+def genComplimentCharacter(rootCharacter):
+	return Character()
+
+def genDerivedCharacter(rootCharacter,complimentCharacter):
+	return Character()
+
+def genfamily(familySize):
+	family = []
+	rootCharacter = genRootCharacter()
+	family.append(rootCharacter)
+	complimentCharacter = genComplimentCharacter(rootCharacter)
+	#Need code here to remove compliment character under certian conditions
+	if(familySize > 1):
+		family.append(complimentCharacter)
+	#Add characters until family is full
+	while(len(family) < familySize):
+		newCharacter = genDerivedCharacter(rootCharacter,complimentCharacter)
+		family.append(newCharacter)
+	return family
+		
 #Class for households
 class Household:
 
 	def __init__(self):
 		self.lastname = "Last Name"
 		self.homesize = -1
-		self.numberOfResidents = gen_household_size()
-		self.residents = []
+		self.residents = genfamily(gen_household_size())
 	
 class Character:
 	def __init__(self):
@@ -84,7 +104,7 @@ if __name__ == '__main__':
 	while(current_total_population < target_population):
 		new_household = Household()
 		households.append(new_household)
-		current_total_population += new_household.numberOfResidents
+		current_total_population += len(new_household.residents)
 	
 		
 	print "Total Population: " + str(current_total_population)
