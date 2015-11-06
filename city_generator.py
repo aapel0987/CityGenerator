@@ -12,6 +12,14 @@
 #		Characters have some basic interesting attributes
 #			Sexual Orientation
 #			Marital Status-Determined by other members of household
+#
+#		Planned Information flow
+#		1. Determine Household Population Size & Lastname
+#		2. Generate people
+#				Age, Gender, Orientation->Attributes
+#		3. Based on the Age, Gender, Orientation, and Attributes, assign jobs
+#		4. Based on assigned job, determine household income bracket and size/area
+#			
 import random
 
 #Class for households
@@ -23,8 +31,9 @@ class Household:
 	
 class Character:
 	def __init__(self):
+		self.gender = "Male or Female, may have Trans prefix."
 		self.firstname = "FirstName"
-		self.lastname = "FirstName"
+		self.lastname = "LastName"
 		self.age = -1
 		self.employment = "This will be a Employment Class"
 		
