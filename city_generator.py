@@ -40,6 +40,16 @@ def gen_household_size():
 		to_return = 1
 	return to_return
 
+	
+#Function to generate an array of Characters, representing a household/family
+# Each family has a root character, which defines a lot about the family.
+# The root character is not based on any previous characters.
+# The next character is a 'complimentary' character, usually representing a spouse. This caracters attributs will be indipendent of the root characters, but
+#		race, gender, age, and orientation bay be related to the root character. NOTE: This character may not be added to the final household, representing a disceased character
+# All subsequent characters are derived from the first two characters. These are usually children, but may be grandparents or siblings of the first two characters
+
+	
+	
 #Class for households
 class Household:
 
