@@ -26,8 +26,18 @@ import random
 class Household:
 	def __init__(self):
 		self.lastname = "Last Name"
-		self.homesize = -1
+		self.homesize = gen_household_size()
 		self.residents = []
+		
+		#Generate Household Size Function
+		def gen_household_size():
+			to_return = household_size_modifier
+			for die_count in range(0,household_die_count):
+				to_return += random.randrange(1,household_die_size+1)
+			#Set minimum household size
+			if to_return < household_size_minimum:
+				to_return = 1
+			return to_return
 	
 class Character:
 	def __init__(self):
@@ -44,6 +54,10 @@ class Employment:
 		self.employees = "This will be an array of Character Classes"
 
 
+##### Step 1 Household Size and last Name
+## Set Target population
+target_population = 6000
+#Generate households until target is reached.
 
 
 
@@ -62,7 +76,6 @@ class Employment:
 
 print "Generating Households"
 #All Population Parameters
-total_population = 6000
 percent_ssa_adults = 0.034
 percent_1_parent_homes = 0.10
 percent_no_parent_homes = 0.03
@@ -116,6 +129,16 @@ def gen_dependent_provider():
 def gen_dependent():
 	return "gen_dependent"
 
+	#Generate Household Size Function
+def gen_household_size():
+	to_return = household_size_modifier
+	for die_count in range(0,household_die_count):
+		to_return += random.randrange(1,household_die_size+1)
+	#Set minimum household size
+	if to_return < household_size_minimum:
+		to_return = 1
+	return to_return
+
 #Generate Persons Function, use to determine gender, orientation, age, occupation, name
 def gen_persons(household_size):
 	home_type = random.randrange(1,100+1)
@@ -166,16 +189,6 @@ def gen_persons(household_size):
 	
 	return to_return
 
-#Generate Household Size Function
-def gen_household_size():
-	to_return = household_size_modifier
-	for die_count in range(0,household_die_count):
-		to_return += random.randrange(1,household_die_size+1)
-	#Set minimum household size
-	if to_return < household_size_minimum:
-		to_return = 1
-	return to_return
-
 #Generate Households function
 def gen_household( home_size_min, home_size_max):
 	household_size = gen_household_size()
@@ -185,23 +198,23 @@ def gen_household( home_size_min, home_size_max):
 	return household_size
 
 #Generate Households function
-def gen_households(target_population, home_size_min, home_size_max):
+def gen_households(target_total_population, home_size_min, home_size_max):
 	total_population = 0
-	while target_population > total_population:
+	while target_total_population > total_population:
 		total_population += gen_household( home_size_min, home_size_max)
 	return total_population
 
 #Generate Poor Homes
-poor_population = gen_households(target_poor_households_ratio*total_population,poor_home_size_min,poor_home_size_max)
+poor_population = gen_households(target_poor_households_ratio*target_population,poor_home_size_min,poor_home_size_max)
 print "Total Poor Population: " + str(poor_population)
 
 #Generate Middle Homes
-middle_population = gen_households(target_middle_households_ratio*total_population,middle_home_size_min,middle_home_size_max)
+middle_population = gen_households(target_middle_households_ratio*target_population,middle_home_size_min,middle_home_size_max)
 print "Total Middle Population: " + str(middle_population)
 
 
 #Generate Rich Homes
-rich_population = gen_households(target_rich_households_ratio*total_population,rich_home_size_min,rich_home_size_max)
+rich_population = gen_households(target_rich_households_ratio*target_population,rich_home_size_min,rich_home_size_max)
 print "Total Rich Population: " + str(rich_population)
 print "Total Population: " + str(rich_population+middle_population+poor_population)
 
