@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 #Code for Generating basic city information
 # Goals:
 #		Characters can be moved to NPC Sheets in Roll20
@@ -62,19 +64,20 @@ class Employment:
 		self.employees = "This will be an array of Character Classes"
 
 
-##### Step 1 Household Size and last Name
-## Set Target population
-target_population = 6000
-#Generate households until target is reached.
-households = []
-current_total_population = 0
-while(current_total_population < target_population):
-	new_household = Household()
-	households.append(new_household)
-	current_total_population += new_household.numberOfResidents
-
+if __name__ == '__main__':
+	##### Step 1 Household Size and last Name
+	## Set Target population
+	target_population = 6000
+	#Generate households until target is reached.
+	households = []
+	current_total_population = 0
+	while(current_total_population < target_population):
+		new_household = Household()
+		households.append(new_household)
+		current_total_population += new_household.numberOfResidents
 	
-print "Total Population: " + str(current_total_population)
+		
+	print "Total Population: " + str(current_total_population)
 
 
 
@@ -190,32 +193,33 @@ def gen_persons(household_size):
 	
 	return to_return
 
-#Generate Households function
-def gen_household( home_size_min, home_size_max):
-	household_size = gen_household_size()
-	home_size = random.randrange(home_size_min,home_size_max+1)
-	sentence = "Household Size:\t" + str(household_size) + "\tHome Size:\t" + str(home_size) + gen_persons(household_size)
-	#print(sentence)
-	return household_size
-
-#Generate Households function
-def gen_households(target_total_population, home_size_min, home_size_max):
-	total_population = 0
-	while target_total_population > total_population:
-		total_population += gen_household( home_size_min, home_size_max)
-	return total_population
-
-#Generate Poor Homes
-poor_population = gen_households(target_poor_households_ratio*target_population,poor_home_size_min,poor_home_size_max)
-print "Legacy Total Poor Population: " + str(poor_population)
-
-#Generate Middle Homes
-middle_population = gen_households(target_middle_households_ratio*target_population,middle_home_size_min,middle_home_size_max)
-print "Legacy Total Middle Population: " + str(middle_population)
-
-
-#Generate Rich Homes
-rich_population = gen_households(target_rich_households_ratio*target_population,rich_home_size_min,rich_home_size_max)
-print "Legacy Total Rich Population: " + str(rich_population)
-print "Legacy Total Population: " + str(rich_population+middle_population+poor_population)
+def old_gen():
+	#Generate Households function
+	def gen_household( home_size_min, home_size_max):
+		household_size = gen_household_size()
+		home_size = random.randrange(home_size_min,home_size_max+1)
+		sentence = "Household Size:\t" + str(household_size) + "\tHome Size:\t" + str(home_size) + gen_persons(household_size)
+		#print(sentence)
+		return household_size
+	
+	#Generate Households function
+	def gen_households(target_total_population, home_size_min, home_size_max):
+		total_population = 0
+		while target_total_population > total_population:
+			total_population += gen_household( home_size_min, home_size_max)
+		return total_population
+	
+	#Generate Poor Homes
+	poor_population = gen_households(target_poor_households_ratio*target_population,poor_home_size_min,poor_home_size_max)
+	print "Legacy Total Poor Population: " + str(poor_population)
+	
+	#Generate Middle Homes
+	middle_population = gen_households(target_middle_households_ratio*target_population,middle_home_size_min,middle_home_size_max)
+	print "Legacy Total Middle Population: " + str(middle_population)
+	
+	
+	#Generate Rich Homes
+	rich_population = gen_households(target_rich_households_ratio*target_population,rich_home_size_min,rich_home_size_max)
+	print "Legacy Total Rich Population: " + str(rich_population)
+	print "Legacy Total Population: " + str(rich_population+middle_population+poor_population)
 
