@@ -1,4 +1,17 @@
 #Code for Generating basic city information
+# Goals:
+#		Characters can be moved to NPC Sheets in Roll20
+#			Have Names
+#			Have Gender
+#			Have a Race
+#			Have Attributes
+#			Have Equipment
+#		Characters have 2 places to be during a day
+#			At Home-Household
+#			At a job-Employment
+#		Characters have some basic interesting attributes
+#			Sexual Orientation
+#			Marital Status-Determined by other members of household
 import random
 
 #Class for households
