@@ -1,5 +1,42 @@
-#Test Code/Learning Python
+#Code for Generating basic city information
 import random
+
+#Class for households
+class Household:
+	def __init__(self):
+		self.lastname = "Last Name"
+		self.homesize = -1
+		self.residents = []
+	
+class Character:
+	def __init__(self):
+		self.firstname = "FirstName"
+		self.lastname = "FirstName"
+		self.age = -1
+		self.employment = "This will be a Employment Class"
+		
+class Employment:
+	def __init__(self):
+		self.jobtitle = "Persons Title"
+		self.employer = "This will be a Character Class"
+		self.employees = "This will be an array of Character Classes"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##############################################################
+#### Legacy code to be eliminated as it is replaced
+##############################################################
 
 print "Generating Households"
 #All Population Parameters
