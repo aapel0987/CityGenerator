@@ -32,6 +32,8 @@ class Enum(set):
 		raise AttributeError
 
 Race = Enum(["human-white", "human-black", "human-asian", "human-native", "human-hispanic", "human-hispanic", "elf", "dwarf", "halforc", "gnome", "halfling"])
+Orientation = Enum(["straight", "gay"])
+Gender = Enum(["male", "female"])
 	
 #Generate Household Size Function
 def gen_household_size():
@@ -56,7 +58,7 @@ def gen_household_size():
 #		race, gender, age, and orientation bay be related to the root character. NOTE: This character may not be added to the final household, representing a disceased character
 # All subsequent characters are derived from the first two characters. These are usually children, but may be grandparents or siblings of the first two characters
 
-#Character Generation Parameters
+#Character Generation assistent functions
 def probablyGay(race):
 	percent_ssa_elves = 0.5
 	percent_ssa_others = 0.034
@@ -67,24 +69,48 @@ def probablyGay(race):
 
 def isGay(race):
 	return 1 if random.randrange(0,1000+1) < 1000*probablyGay(race) else 0
+
+#Age range functions, need to update to support non-humans
+def gen_adult_age(race):
+	return random.randrange(18,40+1)
 	
+def gen_elderly_age(race):
+	return random.randrange(41,100+1)
+	
+def gen_teenager_age(race):
+	return random.randrange(12,17+1)
+	
+def gen_youth_age(race):
+	return random.randrange(0,11+1)
+
+#Character Generation Functions
 def genRootCharacter(race,lastname):
 	#Determine character orientation
 	if isGay(race) == 0:
-		orientation = "Straight"
-		gender = "Male" if random.randrange(0,100+1) != 0 else "Female" #Male/Female select
+		orientation = Orientation.straight
+		gender = Gender.male if random.randrange(0,100+1) != 0 else Gender.female #Male/Female select
 	else:
-		orientation = "Gay"
-		gender = "Male" if random.randrange(0,1+1) != 0 else "Female" #Male/Female select
-	return Character(race,gender,orientation)
+		orientation = Orientation.gay
+		gender = Gender.male if random.randrange(0,1+1) != 0 else Gender.female #Male/Female select
+	return Character(race,gender,orientation, gen_adult_age(race))
 
-#TODO
 def genComplimentCharacter(rootCharacter):
-	return Character(rootCharacter.race,rootCharacter.gender,rootCharacter.orientation)
+	#If the root character is gay, then this character is a copy of the root character.
+	#If the root character is straight, then this character is the opposite sex, but may
+	#still be gay.
+	gender = rootCharacter.gender
+	orientation = rootCharacter.orientation
+	race = rootCharacter.race
+	if rootCharacter.orientation == Orientation.straight:
+		gender = Gender.male if rootCharacter.gender == Gender.female else Gender.female #Male/Female select
+		orientation = Orientation.gay if isGay(race) == 1 else Orientation.straight
+	return Character(rootCharacter.race,gender,orientation,gen_adult_age(race))
 
 #TODO
 def genDerivedCharacter(rootCharacter,complimentCharacter):
-	return Character(rootCharacter.race,rootCharacter.gender,rootCharacter.orientation)
+	race = rootCharacter.race
+	age = gen_youth_age(race)
+	return Character(rootCharacter.race,rootCharacter.gender,rootCharacter.orientation,age)
 
 def genfamily(familySize,primaryrace,lastname):
 	#Population Parameters
@@ -119,13 +145,13 @@ class Household:
 		self.residents = genfamily(gen_household_size(),primaryrace,lastname)
 	
 class Character:
-	def __init__(self,race,gender,orientation):
+	def __init__(self,race,gender,orientation,age):
 		self.race = race
 		self.gender = gender
 		self.orientation = orientation
 		self.firstname = "FirstName"
 		self.lastname = "LastName"
-		self.age = -1
+		self.age = age
 		self.employment = "This will be a Employment Class"
 		
 class Employment:
@@ -134,6 +160,9 @@ class Employment:
 		self.employer = "This will be a Character Class"
 		self.employees = "This will be an array of Character Classes"
 
+############################################################################################
+## Main Execution Code
+############################################################################################
 
 if __name__ == '__main__':
 	##### Step 1 Household Size and last Name
@@ -148,143 +177,5 @@ if __name__ == '__main__':
 		new_household = Household(primaryrace,lastname)
 		households.append(new_household)
 		current_total_population += len(new_household.residents)
-	
 		
 	print "Total Population: " + str(current_total_population)
-
-
-##############################################################
-#### Legacy code to be eliminated as it is replaced
-##############################################################
-
-print "Generating Households"
-
-#Rich Households Parameters
-target_rich_households_ratio = 300.0/6000.0
-rich_home_size_min = 34
-rich_home_size_max = 140
-#Middle Households Parameters
-target_middle_households_ratio = 1700.0/6000.0
-middle_home_size_min = 34
-middle_home_size_max = 50
-#Poor Households Parameters
-target_poor_households_ratio = 4000.0/6000.0
-poor_home_size_min = 0
-poor_home_size_max = 50
-
-#Age range functions
-def gen_adult_age():
-	return random.randrange(18,40+1)
-	
-def gen_elderly_age():
-	return random.randrange(41,100+1)
-	
-def gen_teenager_age():
-	return random.randrange(12,17+1)
-	
-def gen_youth_age():
-	return random.randrange(0,11+1)
-
-#Person Generation Functions
-def gen_provider(gender,orientation):
-	return str(gender) + ", " + str(orientation)
-
-def gen_special_provider(gender,orientation):
-	return str(gender) + ", " + str(orientation)
-
-def gen_partner(gender,orientation):
-	return str(gender) + ", " + str(orientation)
-
-def gen_dependent_provider():
-	#All dependants are straight, usually due to age
-	orientation = "Straight"
-	gender = "Male" if random.randrange(0,1+1) != 0 else "Female" #Male/Female select
-	return gen_special_provider(gender,orientation)
-
-def gen_dependent():
-	return "gen_dependent"
-
-#Generate Persons Function, use to determine gender, orientation, age, occupation, name
-def gen_persons(household_size):
-	#All Population Parameters
-	percent_ssa_adults = 0.034
-	percent_1_parent_homes = 0.10
-	percent_no_parent_homes = 0.03
-	home_type = random.randrange(1,100+1)
-	to_return = ""
-	#Two adult provider homes, very typical
-	if home_type > 100*(percent_1_parent_homes+percent_no_parent_homes):	#Two Provider Home
-		#Determine provider orientation
-		if random.randrange(0,1000+1) > 1000*percent_ssa_adults:
-			orientation = "Straight"
-			gender = "Male" if random.randrange(0,100+1) != 0 else "Female" #Male/Female select
-		else:
-			orientation = "Gay"
-			gender = "Male" if random.randrange(0,1+1) != 0 else "Female" #Male/Female select
-		to_return += "\t" + gen_provider(gender,orientation)
-		household_size -= 1
-		#If there is more than one member, generate a partner
-		if household_size > 0:
-			#If the first partner is straight re-determine orientation invert gender
-			if orientation == "Straight":
-				orientation = "Straight" if random.randrange(0,1000+1) > 1000*percent_ssa_adults else "Gay"
-				gender = "Male" if gender == "Female" else "Female"
-			to_return += "\t" + gen_partner(gender,orientation)
-			household_size -= 1
-	# One adult provider homes, less typical
-	elif home_type > 100*(percent_no_parent_homes):	#One Provider Home
-		#Determine provider orientation
-		if random.randrange(0,1000+1) > 1000*percent_ssa_adults:
-			orientation = "Straight"
-			gender = "Male" if random.randrange(0,10+1) == 0 else "Female" #Male/Female select, most are widowers
-		else:
-			orientation = "Gay"
-			gender = "Male" if random.randrange(0,1+1) != 0 else "Female" #Male/Female select
-		to_return += "\t" + gen_provider(gender,orientation)
-		household_size -= 1
-	# No adult provider homes, very special cases, always straight
-	else:
-		orientation = "Straight"
-		gender = "Male" if random.randrange(0,100+1) != 0 else "Female" #Male/Female select
-		to_return += "\t" + gen_special_provider(gender,orientation)
-		household_size -= 1
-	
-	while household_size > 0:
-		if random.randrange(0,100+1) == 0:
-			to_return += "\t" + gen_dependent_provider()
-		else:
-			to_return += "\t" + gen_dependent()
-		household_size -= 1
-	
-	return to_return
-
-def old_gen():
-	#Generate Households function
-	def gen_household( home_size_min, home_size_max):
-		household_size = gen_household_size()
-		home_size = random.randrange(home_size_min,home_size_max+1)
-		sentence = "Household Size:\t" + str(household_size) + "\tHome Size:\t" + str(home_size) + gen_persons(household_size)
-		#print(sentence)
-		return household_size
-	
-	#Generate Households function
-	def gen_households(target_total_population, home_size_min, home_size_max):
-		total_population = 0
-		while target_total_population > total_population:
-			total_population += gen_household( home_size_min, home_size_max)
-		return total_population
-	
-	#Generate Poor Homes
-	poor_population = gen_households(target_poor_households_ratio*target_population,poor_home_size_min,poor_home_size_max)
-	print "Legacy Total Poor Population: " + str(poor_population)
-	
-	#Generate Middle Homes
-	middle_population = gen_households(target_middle_households_ratio*target_population,middle_home_size_min,middle_home_size_max)
-	print "Legacy Total Middle Population: " + str(middle_population)
-	
-	
-	#Generate Rich Homes
-	rich_population = gen_households(target_rich_households_ratio*target_population,rich_home_size_min,rich_home_size_max)
-	print "Legacy Total Rich Population: " + str(rich_population)
-	print "Legacy Total Population: " + str(rich_population+middle_population+poor_population)
-
