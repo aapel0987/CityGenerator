@@ -35,6 +35,16 @@ Race = Enum(["human-white", "human-black", "human-asian", "human-native", "human
 Orientation = Enum(["straight", "gay"])
 Gender = Enum(["male", "female"])
 	
+#Determine Household Primary Race
+#TODO: Weight different races rather than pulling a random race
+def gen_primary_race():
+	return next(iter(Race))#This will supposidly get me a random element. Not sure if I am a believer.
+
+#Name Retrevial Code
+#TODO: Subfunctions for each race
+def get_last_name(race):
+	return "Last Name"
+	
 #Generate Household Size Function
 def gen_household_size():
 	#Equation for household population: highest of 3d7-7 and 1
@@ -137,7 +147,6 @@ def genfamily(familySize,primaryrace,lastname):
 		
 #Class for households
 class Household:
-
 	def __init__(self,primaryrace,lastname):
 		self.primaryrace = primaryrace
 		self.lastname = lastname
@@ -172,8 +181,8 @@ if __name__ == '__main__':
 	households = []
 	current_total_population = 0
 	while(current_total_population < target_population):
-		primaryrace = "Need code to select race here. Function of proportions. Don't forget that there is a Race enumerated type above!"
-		lastname = "Need code to select last name here. Function of Primary Race."
+		primaryrace = gen_primary_race()
+		lastname = get_last_name(primaryrace)
 		new_household = Household(primaryrace,lastname)
 		households.append(new_household)
 		current_total_population += len(new_household.residents)
