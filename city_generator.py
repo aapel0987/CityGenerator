@@ -24,6 +24,14 @@
 #			
 import random
 
+#Race Enumeration
+class Enum(set):
+	def __getattr__(self, name):
+		if name in self:
+			return name
+		raise AttributeError
+
+Race = Enum(["human", "elf", "dwarf", "halforc", "gnome", "halfling"])
 	
 #Generate Household Size Function
 def gen_household_size():
@@ -48,23 +56,53 @@ def gen_household_size():
 #		race, gender, age, and orientation bay be related to the root character. NOTE: This character may not be added to the final household, representing a disceased character
 # All subsequent characters are derived from the first two characters. These are usually children, but may be grandparents or siblings of the first two characters
 
-def genRootCharacter():
-	return Character()
+#Character Generation Parameters
+def probablyGay(race):
+	percent_ssa_elves = 0.5
+	percent_ssa_others = 0.034
+	to_return = percent_ssa_others
+	if race == Race.elf:
+		to_return = percent_ssa_elves
+	return to_return
 
+def isGay(race):
+	return 1 if random.randrange(0,1000+1) < 1000*probablyGay(race) else 0
+	
+def genRootCharacter(race,lastname):
+	#Determine character orientation
+	if isGay(race) == 0:
+		orientation = "Straight"
+		gender = "Male" if random.randrange(0,100+1) != 0 else "Female" #Male/Female select
+	else:
+		orientation = "Gay"
+		gender = "Male" if random.randrange(0,1+1) != 0 else "Female" #Male/Female select
+	return Character(race,gender,orientation)
+
+#TODO
 def genComplimentCharacter(rootCharacter):
-	return Character()
+	return Character(rootCharacter.race,rootCharacter.gender,rootCharacter.orientation)
 
+#TODO
 def genDerivedCharacter(rootCharacter,complimentCharacter):
-	return Character()
+	return Character(rootCharacter.race,rootCharacter.gender,rootCharacter.orientation)
 
-def genfamily(familySize):
+def genfamily(familySize,primaryrace,lastname):
+	#Population Parameters
+	percent_1_parent_homes = 0.10
+	percent_no_parent_homes = 0.03
 	family = []
-	rootCharacter = genRootCharacter()
-	family.append(rootCharacter)
-	complimentCharacter = genComplimentCharacter(rootCharacter)
-	#Need code here to remove compliment character under certian conditions
-	if(familySize > 1):
-		family.append(complimentCharacter)
+	rootCharacter = genRootCharacter(primaryrace,lastname)
+	if(familySize == 1):
+		family.append(rootCharacter)
+	else:	#More than one character in this family, full generation proceeds
+		complimentCharacter = genComplimentCharacter(rootCharacter)
+		#Now determine how many of the important characters are still around
+		home_type = random.randrange(1,100+1)
+		if home_type > 100*(percent_1_parent_homes+percent_no_parent_homes):	#Two Provider Home
+			family.append(rootCharacter)
+			family.append(complimentCharacter)
+		elif home_type > 100*(percent_no_parent_homes):	#One Provider Home
+			family.append(complimentCharacter)
 	#Add characters until family is full
 	while(len(family) < familySize):
 		newCharacter = genDerivedCharacter(rootCharacter,complimentCharacter)
@@ -74,14 +112,17 @@ def genfamily(familySize):
 #Class for households
 class Household:
 
-	def __init__(self):
-		self.lastname = "Last Name"
+	def __init__(self,primaryrace,lastname):
+		self.primaryrace = primaryrace
+		self.lastname = lastname
 		self.homesize = -1
-		self.residents = genfamily(gen_household_size())
+		self.residents = genfamily(gen_household_size(),primaryrace,lastname)
 	
 class Character:
-	def __init__(self):
-		self.gender = "Male or Female, may have Trans prefix."
+	def __init__(self,race,gender,orientation):
+		self.race = race
+		self.gender = gender
+		self.orientation = orientation
 		self.firstname = "FirstName"
 		self.lastname = "LastName"
 		self.age = -1
@@ -102,7 +143,9 @@ if __name__ == '__main__':
 	households = []
 	current_total_population = 0
 	while(current_total_population < target_population):
-		new_household = Household()
+		primaryrace = "Need code to select race here. Function of proportions. Don't forget that there is a Race enumerated type above!"
+		lastname = "Need code to select last name here. Function of Primary Race."
+		new_household = Household(primaryrace,lastname)
 		households.append(new_household)
 		current_total_population += len(new_household.residents)
 	
@@ -110,23 +153,11 @@ if __name__ == '__main__':
 	print "Total Population: " + str(current_total_population)
 
 
-
-
-
-
-
-
-
-
 ##############################################################
 #### Legacy code to be eliminated as it is replaced
 ##############################################################
 
 print "Generating Households"
-#All Population Parameters
-percent_ssa_adults = 0.034
-percent_1_parent_homes = 0.10
-percent_no_parent_homes = 0.03
 
 #Rich Households Parameters
 target_rich_households_ratio = 300.0/6000.0
@@ -175,6 +206,10 @@ def gen_dependent():
 
 #Generate Persons Function, use to determine gender, orientation, age, occupation, name
 def gen_persons(household_size):
+	#All Population Parameters
+	percent_ssa_adults = 0.034
+	percent_1_parent_homes = 0.10
+	percent_no_parent_homes = 0.03
 	home_type = random.randrange(1,100+1)
 	to_return = ""
 	#Two adult provider homes, very typical
