@@ -31,7 +31,7 @@ class Enum(set):
 			return name
 		raise AttributeError
 
-Race = Enum(["human", "elf", "dwarf", "halforc", "gnome", "halfling"])
+Race = Enum(["human-white", "human-black", "human-asian", "human-native", "human-hispanic", "human-hispanic", "elf", "dwarf", "halforc", "gnome", "halfling"])
 	
 #Generate Household Size Function
 def gen_household_size():
