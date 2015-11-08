@@ -31,19 +31,95 @@ class Enum(set):
 			return name
 		raise AttributeError
 
-Race = Enum(["human-white", "human-black", "human-asian", "human-native", "human-hispanic", "human-hispanic", "elf", "dwarf", "halforc", "gnome", "halfling"])
+Race = Enum(["human_white", "human_black", "human_asian", "human_native", "human_mixed", "human_hispanic", "elf", "dwarf", "halforc", "gnome", "halfling"])
 Orientation = Enum(["straight", "gay"])
 Gender = Enum(["male", "female"])
 	
+
+def resolve_distribution(distribution):
+	#Here we assume that we were passed a set of paired (race, probability) objects. Create a cumulative distribution function
+	cdfs = []
+	totalprobability = 0
+	for race,probability in distribution:
+		totalprobability += probability
+		cdfs.append( (race,totalprobability) )
+	#Now that we have a distribution, create a random number and find it in the distribution
+	max = cdfs[-1][1]
+	rand = random.random()*max
+	for race,probability in cdfs:
+		if probability>rand:
+			return race
+	return None
+	
 #Determine Household Primary Race
-#TODO: Weight different races rather than pulling a random race
 def gen_primary_race():
-	return next(iter(Race))#This will supposidly get me a random element. Not sure if I am a believer.
+	#	This will return a human racial subtype. Probabilities are taken from American Demographics(Wikipedia)
+	racial_pairs = (
+		(Race.human_mixed	, 62.0	),
+		(Race.elf					, 10.0	),
+		(Race.dwarf				, 15.0	),
+		(Race.halforc			, 3.0		),
+		(Race.gnome				, 5.0		),
+		(Race.halfling		, 5.0		),
+	)
+	race = resolve_distribution(racial_pairs)
+	#If a human is rolled reroll to determine what subrace
+	if race == Race.human_mixed:
+		race = gen_human_race()
+
+	return race
+
+def gen_human_race():
+	#	This will return a human racial subtype. Probabilities are taken from American Demographics(Wikipedia)
+	racial_pairs = (
+		(Race.human_white			, 63.7	),	#	Non-Hispanic White	63.7 %
+		(Race.human_black			, 12.2	),	#	Non-Hispanic Black or African American	12.2 %
+		(Race.human_asian			, 4.7		),	#	Non-Hispanic Asian	4.7 %
+		(Race.human_native		, 0.7		),	#	Non-Hispanic American Indian or Alaska Native	0.7 %
+		(Race.human_native		, 0.2		),	#	Non-Hispanic Native Hawaiian or other Pacific Islander	0.2 %
+		(Race.human_mixed			, 0.2		),	#	Non-Hispanic some other race	0.2 %
+		(Race.human_mixed			, 1.9		),	#	Non-Hispanic two or more races	1.9 %
+		(Race.human_hispanic	, 16.4	)		#	Hispanic or Latino	16.4 %
+	)
+	
+	return resolve_distribution(racial_pairs)	#This will supposidly get me a random element. Not sure if I am a believer.
 
 #Name Retrevial Code
+def get_human_last_name(race):	
+	return "Add Last Name Code"
+
+def get_elf_last_name(race):
+	return "Add Last Name Code"
+
+def get_dwarf_last_name(race):
+	return "Add Last Name Code"
+
+def get_halforc_last_name(race):
+	return ""	#This is correct, half orcs don't get last names
+
+def get_gnome_last_name(race):
+	return "Add Last Name Code"
+
+def get_halfling_last_name(race):
+	return "Add Last Name Code"
+
 #TODO: Subfunctions for each race
 def get_last_name(race):
-	return "Last Name"
+	namelookup = {
+		Race.human_white		: get_human_last_name   ,
+		Race.human_black		: get_human_last_name   ,
+		Race.human_asian		: get_human_last_name   ,
+		Race.human_native		: get_human_last_name   ,
+		Race.human_native		: get_human_last_name   ,
+		Race.human_mixed		: get_human_last_name   ,
+		Race.human_hispanic	: get_human_last_name   ,
+		Race.elf						: get_elf_last_name     ,
+		Race.dwarf					: get_dwarf_last_name   ,
+		Race.halforc				: get_halforc_last_name ,
+		Race.gnome					: get_gnome_last_name   ,
+		Race.halfling				: get_halfling_last_name
+	}
+	return namelookup[race](race)
 	
 #Generate Household Size Function
 def gen_household_size():
@@ -60,7 +136,6 @@ def gen_household_size():
 		to_return = 1
 	return to_return
 
-	
 #Function to generate an array of Characters, representing a household/family
 # Each family has a root character, which defines a lot about the family.
 # The root character is not based on any previous characters.
