@@ -23,6 +23,7 @@
 #		4. Based on assigned job, determine household income bracket and size/area
 #			
 import random
+import csv
 
 #Race Enumeration
 class Enum(set):
@@ -85,8 +86,25 @@ def gen_human_race():
 	return resolve_distribution(racial_pairs)	#This will supposidly get me a random element. Not sure if I am a believer.
 
 #Name Retrevial Code
-def get_human_last_name(race):	
-	return "Add Last Name Code"
+def random_line(afile):
+	line = next(afile)
+	for num, aline in enumerate(afile):
+		if random.randrange(num + 2): continue
+		line = aline
+	return line
+
+def get_human_last_name(race):
+	human_subrace = str(race).split('_')[1]
+	list
+	while True:
+		name_race = random.choice(get_human_last_name.lines).strip().split(',')
+		if name_race[1].upper() == human_subrace.upper():
+			break
+	return name_race[0]
+#Lines is a static element of getting a human last name
+get_human_last_name.file = open('names/human_last_names.csv')
+get_human_last_name.lines = get_human_last_name.file.read().splitlines()
+get_human_last_name.file.close()
 
 def get_elf_last_name(race):
 	return "Add Last Name Code"
