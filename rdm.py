@@ -15,9 +15,9 @@ class RDMFile:
 	def dump(self, fname, compressed=False):
 		fout = open(fname, 'w+')
 		if compressed:
-			json.dump(self.j, fout, indent=None, separators=(','.':'))
+			json.dump(self.j, fout, indent=None, separators=(',',':'))
 		else:
-			json.dump(self.j, fout, indent=4, separators(',',': '))
+			json.dump(self.j, fout, indent=4, separators=(',',': '))
 		fout.flush()
 		fout.close()
 
