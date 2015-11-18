@@ -37,6 +37,8 @@ import random
 import json
 from json import *
 import sympy
+import polygon_math
+from polygon_math import *
 
 class ComplexEncoder(json.JSONEncoder):
 	def default(self, obj):
@@ -64,6 +66,15 @@ class BasicPolygon:
 		self.points = points
 		self.basex = basex
 		self.basey = basey
+		
+	def is_walkable(self):
+		return False
+
+	def get_polygon(self):
+		points = []
+		for point in self.points:
+			points.append(Point(point.x,point.y))
+		return Polygon(points)
 
 def basicpolygon_decoder(dictonary):
 	if 'type' in dictonary and dictonary['type'] == 'BasicPolygon':
@@ -102,6 +113,9 @@ class WalkableRectangle:
 		self.en_o_l_len = en_o_l_len
 		self.en_i_l_len = en_i_l_len
 		self.en_offest  = en_offest
+		
+	def is_walkable(self):
+		return True
 
 def walkablerectangle_decoder(dictonary):
 	if 'type' in dictonary and dictonary['type'] == 'WalkableRectangle':
@@ -117,6 +131,9 @@ class WalkableCircle:
 		self.basey = basey
 		self.outer_radius = outer_radius
 		self.inner_radius = inner_radius
+		
+	def is_walkable(self):
+		return True
 
 def walkablecircle_decoder(dictonary):
 	if 'type' in dictonary and dictonary['type'] == 'WalkableCircle':
@@ -134,7 +151,6 @@ def shape_decoder(dictonary):
 	return dictonary
 
 class Layer:
-	
 	def __init__(self,basex,basey,minstep, core_material, edge_material=None):
 		self.type = self.__class__.__name__
 		self.basex = basex
@@ -144,6 +160,19 @@ class Layer:
 		self.edge_material = edge_material
 		self.shapes = []		
 
+	def get_polygon(self)
+		single_polygons = []
+		internal_polygons = []
+		external_polygons = []
+		for shape in shapes:
+			if shape.is_walkable():
+				internal_polygons.append(shape.get_internal_polygon())
+				external_polygons.append(shape.get_external_polygon())
+			else:
+				single_polygons.append(shape.get_polygon())
+		single_polygons.append(walk_polygons(polygon_union(external_polygons),polygon_union(internal_polygons)))
+		return polygon_union(single_polygons)
+		
 	def tostring(self):
 		to_return = "basex: " + str(self.basex) + ", basey: " + str(self.basey) + ", minstep: " + str(self.minstep)
 		return to_return
