@@ -39,6 +39,8 @@ from json import *
 import sympy
 import polygon_math
 from polygon_math import *
+import polygon_walker
+from polygon_walker import *
 
 class ComplexEncoder(json.JSONEncoder):
 	def default(self, obj):
@@ -74,7 +76,7 @@ class BasicPolygon:
 		points = []
 		for point in self.points:
 			points.append(Point(point.x,point.y))
-		return Polygon(points)
+		return Polygon(*points)
 
 def basicpolygon_decoder(dictonary):
 	if 'type' in dictonary and dictonary['type'] == 'BasicPolygon':
@@ -160,11 +162,11 @@ class Layer:
 		self.edge_material = edge_material
 		self.shapes = []		
 
-	def get_polygon(self)
+	def get_polygon(self):
 		single_polygons = []
 		internal_polygons = []
 		external_polygons = []
-		for shape in shapes:
+		for shape in self.shapes:
 			if shape.is_walkable():
 				internal_polygons.append(shape.get_internal_polygon())
 				external_polygons.append(shape.get_external_polygon())
