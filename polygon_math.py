@@ -129,11 +129,12 @@ def get_perimiter_points(polygon,minstep):
 	poly_points = []
 	end_point = None
 	aligned_polygon = align_polygon(polygon,minstep)
+	print "Aligned Polygon: " + str(aligned_polygon)
 	#Now that the polygon is aligned to the minimum step each side will be an integer multiple of steps in X&Y direction
-	for index in range(len(polygon.vertices)):
+	for index in range(len(aligned_polygon.vertices)):
 		#Determine Direction of Movement
-		start_point = polygon.vertices[index-1]
-		end_point = polygon.vertices[index]
+		start_point = aligned_polygon.vertices[index-1]
+		end_point = aligned_polygon.vertices[index]
 		#Create the intermediate points the start and end 
 		poly_points.append(start_point)
 		in_between_points = get_in_between_points(start_point,end_point,minstep)
@@ -142,8 +143,10 @@ def get_perimiter_points(polygon,minstep):
 	return poly_points
 	
 def get_polygon_points__worker(polygon,minstep,add_perimiter_points):
+	print polygon
+	print minstep
 	perimiter_points = get_perimiter_points(polygon,minstep)
-	placed_polygon = Polygon(*perimiter_points)
+	print "perimiter_points: " + str(perimiter_points)
 	enclosed_points = []
 	if add_perimiter_points:
 		enclosed_points += perimiter_points
@@ -198,7 +201,7 @@ def get_polygon_points__worker(polygon,minstep,add_perimiter_points):
 		#If we pop from either of the others then we pop the next smallest X value, which will constitute a line. We then add all intermediate points to the enclosed points.
 		#BUT: What to do if any of these lists are empty? It is certianly possible, especially in small polygons. If that happens then we can safely ignore that list,
 		#but how? Without overcomplication preferably.
-		while len(close_list) > 0 or len(open_or_close_list) > 0 or len(open_list) > 0:	#Run until these are empty
+		while len(close_list) + len(open_or_close_list) + len(open_list) > 1:	#Run until these are empty
 			#Determine the current X value of each list
 			both_x  = float('inf') if len(open_or_close_list) == 0 else open_or_close_list[0].x
 			open_x  = float('inf') if len(open_list) == 0 else open_list[0].x
@@ -206,7 +209,6 @@ def get_polygon_points__worker(polygon,minstep,add_perimiter_points):
 			#Now determine which is the least, and proceed based on the relavant number
 			if close_x < open_x and close_x < both_x:	#If this happens first, then we have found a perimiter line segment and need to remove it
 				del close_list[0]
-				del open_list[0]
 			else:	#If this is the case, then it's time to make a segment!
 				if open_x < both_x:#Find the segment start
 					start_point = open_list[0]

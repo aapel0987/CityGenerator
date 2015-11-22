@@ -37,6 +37,7 @@ import random
 import json
 from json import *
 import sympy
+import math
 import polygon_math
 from polygon_math import *
 import polygon_walker
@@ -72,7 +73,7 @@ class BasicPolygon:
 	def is_walkable(self):
 		return False
 
-	def get_polygon(self):
+	def get_polygon(self,minstep):
 		points = []
 		for point in self.points:
 			points.append(Point(point.x,point.y))
@@ -83,6 +84,37 @@ def basicpolygon_decoder(dictonary):
 		to_return = BasicPolygon(None,dictonary['basex'], dictonary['basey'])
 		for point in dictonary['points']:
 			to_return.points.append(basicpoint_decoder(point))
+		return to_return
+	return dictonary
+
+class BasicCircle:
+	def __init__(self,radius,basex=None,basey=None):
+		if basex == None: basex = 0
+		if basey == None: basey = 0
+		self.type = self.__class__.__name__
+		self.radius = radius
+		self.basex = basex
+		self.basey = basey
+		
+	def is_walkable(self):
+		return False
+
+	def get_polygon(self,minstep):
+		points = []
+		#Use law of the cosines to determine the angle of each step change
+		angle_change = math.acos((math.pow(minstep,2)-2*math.pow(self.radius,2))/(-1*2*math.pow(self.radius,2)))
+		current_angle = math.asin((self.radius*math.sin(angle_change))/minstep)
+		#Generate the points on the circle
+		cur_point = Point(self.basex - self.radius,self.basey)
+		for count in range(int(2*math.pi/angle_change)):
+			points.append(cur_point)
+			cur_point = Point(cur_point.x + minstep*math.cos(current_angle),cur_point.y + minstep*math.sin(current_angle))
+			current_angle -= angle_change
+		return Polygon(*points)
+
+def basiccircle_decoder(dictonary):
+	if 'type' in dictonary and dictonary['type'] == 'BasicCircle':
+		to_return = BasicCircle(dictonary['radius'],dictonary['basex'], dictonary['basey'])
 		return to_return
 	return dictonary
 
@@ -150,6 +182,8 @@ def shape_decoder(dictonary):
 		return walkablecircle_decoder(dictonary)
 	elif 'type' in dictonary and dictonary['type'] == 'BasicPolygon':
 		return basicpolygon_decoder(dictonary)
+	elif 'type' in dictonary and dictonary['type'] == 'BasicCircle':
+		return basiccircle_decoder(dictonary)
 	return dictonary
 
 class Layer:
@@ -162,16 +196,16 @@ class Layer:
 		self.edge_material = edge_material
 		self.shapes = []		
 
-	def get_polygon(self):
+	def get_polygon(self,minstep):
 		single_polygons = []
 		internal_polygons = []
 		external_polygons = []
 		for shape in self.shapes:
 			if shape.is_walkable():
-				internal_polygons.append(shape.get_internal_polygon())
-				external_polygons.append(shape.get_external_polygon())
+				internal_polygons.append(shape.get_internal_polygon(minstep))
+				external_polygons.append(shape.get_external_polygon(minstep))
 			else:
-				single_polygons.append(shape.get_polygon())
+				single_polygons.append(shape.get_polygon(minstep))
 		single_polygons.append(walk_polygons(polygon_union(external_polygons),polygon_union(internal_polygons)))
 		return polygon_union(single_polygons)
 		
