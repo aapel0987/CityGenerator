@@ -5,9 +5,9 @@ from map_generator import *
 
 def overlay_text_on_matrix_points(input_matrix,character,minstep,points):
 	for point in points:
-		if 0 < point.x and point.x < len(input_matrix):
-			if 0 < point.y and point.y < len(input_matrix[point.x/minstep]):
-				input_matrix[point.x/minstep][point.y/minstep] = character
+		if 0 < int(point.x/minstep) and int(point.x/minstep) < len(input_matrix):
+			if 0 < int(point.y/minstep) and int(point.y/minstep) < len(input_matrix[int(point.x/minstep)]):
+				input_matrix[int(point.x/minstep)][int(point.y/minstep)] = character
 	return input_matrix
 
 
