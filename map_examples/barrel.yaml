@@ -1,0 +1,528 @@
+{
+    "layers": {
+        "source": [
+            {
+                "data": {
+                    "begin": {
+                        "y": 6,
+                        "x": 15,
+                        "__type": "flash.geom::Point",
+                        "__id": 5
+                    },
+                    "angle": 0,
+                    "__id": 4,
+                    "alpha": 30,
+                    "__type": "com.locator.objs::Obst",
+                    "actual": {
+                        "tiley": 0,
+                        "tilex": 0,
+                        "__id": 6,
+                        "__type": "com.locator.data::MapItem",
+                        "group_folder": "objects/barrels/",
+                        "id": 1,
+                        "pack": {
+                            "is_local": false,
+                            "enable_printing": "off",
+                            "modes": {
+                                "plants": {
+                                    "__type": "com.locator.logic::TextureMode",
+                                    "__id": 9,
+                                    "groups": {
+                                        "__type": "Object",
+                                        "__id": 10
+                                    }
+                                },
+                                "decor": {
+                                    "__type": "com.locator.logic::TextureMode",
+                                    "__id": 11,
+                                    "groups": {
+                                        "__type": "Object",
+                                        "__id": 12
+                                    }
+                                },
+                                "floor": {
+                                    "__type": "com.locator.logic::TextureMode",
+                                    "__id": 16,
+                                    "groups": {
+                                        "1": {
+                                            "tiles": [
+                                                "default"
+                                            ],
+                                            "rotate": "off",
+                                            "title": "small tiles",
+                                            "tiley": 3,
+                                            "tilex": 3,
+                                            "__id": 23,
+                                            "__type": "com.locator.logic::TileGroup",
+                                            "blur": "off",
+                                            "y": 0,
+                                            "x": 0,
+                                            "folder": "floors/indoor/",
+                                            "shadow": "on"
+                                        },
+                                        "0": {
+                                            "tiles": [
+                                                null,
+                                                {
+                                                    "tiley": 1,
+                                                    "tilex": 1,
+                                                    "__id": 19,
+                                                    "__type": "com.locator.data::MapItem",
+                                                    "group_folder": "floors/indoor_big/",
+                                                    "id": 1,
+                                                    "pack": {
+                                                        "__type": "com.locator.logic::TextureTree",
+                                                        "__id": 7
+                                                    }
+                                                },
+                                                {
+                                                    "tiley": 0,
+                                                    "tilex": 0,
+                                                    "__id": 20,
+                                                    "__type": "com.locator.data::MapItem",
+                                                    "group_folder": "floors/indoor_big/",
+                                                    "id": 2,
+                                                    "pack": {
+                                                        "__type": "com.locator.logic::TextureTree",
+                                                        "__id": 7
+                                                    }
+                                                },
+                                                {
+                                                    "tiley": 0,
+                                                    "tilex": 0,
+                                                    "__id": 21,
+                                                    "__type": "com.locator.data::MapItem",
+                                                    "group_folder": "floors/indoor_big/",
+                                                    "id": 3,
+                                                    "pack": {
+                                                        "__type": "com.locator.logic::TextureTree",
+                                                        "__id": 7
+                                                    }
+                                                },
+                                                {
+                                                    "tiley": 0,
+                                                    "tilex": 0,
+                                                    "__id": 22,
+                                                    "__type": "com.locator.data::MapItem",
+                                                    "group_folder": "floors/indoor_big/",
+                                                    "id": 4,
+                                                    "pack": {
+                                                        "__type": "com.locator.logic::TextureTree",
+                                                        "__id": 7
+                                                    }
+                                                }
+                                            ],
+                                            "rotate": "off",
+                                            "title": "tiles",
+                                            "tiley": 1,
+                                            "tilex": 1,
+                                            "__id": 18,
+                                            "__type": "com.locator.logic::TileGroup",
+                                            "blur": "off",
+                                            "y": 0,
+                                            "x": 0,
+                                            "folder": "floors/indoor_big/",
+                                            "shadow": "on"
+                                        },
+                                        "2": {
+                                            "tiles": [
+                                                "default"
+                                            ],
+                                            "rotate": "off",
+                                            "title": "grounds",
+                                            "tiley": 3,
+                                            "tilex": 3,
+                                            "__id": 24,
+                                            "__type": "com.locator.logic::TileGroup",
+                                            "blur": "off",
+                                            "y": 0,
+                                            "x": 0,
+                                            "folder": "floors/outdoor/",
+                                            "shadow": "on"
+                                        },
+                                        "__type": "Object",
+                                        "__id": 17
+                                    }
+                                },
+                                "obstacles": {
+                                    "__type": "com.locator.logic::TextureMode",
+                                    "__id": 25,
+                                    "groups": {
+                                        "__id": 26,
+                                        "1": {
+                                            "tiles": [
+                                                "default"
+                                            ],
+                                            "rotate": "off",
+                                            "title": "tables & chairs",
+                                            "tiley": 1,
+                                            "tilex": 1,
+                                            "__id": 41,
+                                            "__type": "com.locator.logic::TileGroup",
+                                            "blur": "off",
+                                            "y": 2,
+                                            "x": 2,
+                                            "folder": "objects/tables/",
+                                            "shadow": "on"
+                                        },
+                                        "0": {
+                                            "tiles": [
+                                                null,
+                                                {
+                                                    "__type": "com.locator.data::MapItem",
+                                                    "__id": 6
+                                                },
+                                                {
+                                                    "tiley": 0,
+                                                    "tilex": 0,
+                                                    "__id": 28,
+                                                    "__type": "com.locator.data::MapItem",
+                                                    "group_folder": "objects/barrels/",
+                                                    "id": 2,
+                                                    "pack": {
+                                                        "__type": "com.locator.logic::TextureTree",
+                                                        "__id": 7
+                                                    }
+                                                },
+                                                {
+                                                    "tiley": 0,
+                                                    "tilex": 0,
+                                                    "__id": 29,
+                                                    "__type": "com.locator.data::MapItem",
+                                                    "group_folder": "objects/barrels/",
+                                                    "id": 3,
+                                                    "pack": {
+                                                        "__type": "com.locator.logic::TextureTree",
+                                                        "__id": 7
+                                                    }
+                                                },
+                                                {
+                                                    "tiley": 0,
+                                                    "tilex": 0,
+                                                    "__id": 30,
+                                                    "__type": "com.locator.data::MapItem",
+                                                    "group_folder": "objects/barrels/",
+                                                    "id": 4,
+                                                    "pack": {
+                                                        "__type": "com.locator.logic::TextureTree",
+                                                        "__id": 7
+                                                    }
+                                                },
+                                                {
+                                                    "tiley": 0,
+                                                    "tilex": 0,
+                                                    "__id": 31,
+                                                    "__type": "com.locator.data::MapItem",
+                                                    "group_folder": "objects/barrels/",
+                                                    "id": 5,
+                                                    "pack": {
+                                                        "__type": "com.locator.logic::TextureTree",
+                                                        "__id": 7
+                                                    }
+                                                },
+                                                {
+                                                    "tiley": 0,
+                                                    "tilex": 0,
+                                                    "__id": 32,
+                                                    "__type": "com.locator.data::MapItem",
+                                                    "group_folder": "objects/barrels/",
+                                                    "id": 6,
+                                                    "pack": {
+                                                        "__type": "com.locator.logic::TextureTree",
+                                                        "__id": 7
+                                                    }
+                                                },
+                                                {
+                                                    "tiley": 0,
+                                                    "tilex": 0,
+                                                    "__id": 33,
+                                                    "__type": "com.locator.data::MapItem",
+                                                    "group_folder": "objects/barrels/",
+                                                    "id": 7,
+                                                    "pack": {
+                                                        "__type": "com.locator.logic::TextureTree",
+                                                        "__id": 7
+                                                    }
+                                                },
+                                                {
+                                                    "tiley": 0,
+                                                    "tilex": 0,
+                                                    "__id": 34,
+                                                    "__type": "com.locator.data::MapItem",
+                                                    "group_folder": "objects/barrels/",
+                                                    "id": 8,
+                                                    "pack": {
+                                                        "__type": "com.locator.logic::TextureTree",
+                                                        "__id": 7
+                                                    }
+                                                },
+                                                {
+                                                    "tiley": 0,
+                                                    "tilex": 0,
+                                                    "__id": 35,
+                                                    "__type": "com.locator.data::MapItem",
+                                                    "group_folder": "objects/barrels/",
+                                                    "id": 9,
+                                                    "pack": {
+                                                        "__type": "com.locator.logic::TextureTree",
+                                                        "__id": 7
+                                                    }
+                                                },
+                                                {
+                                                    "tiley": 0,
+                                                    "tilex": 0,
+                                                    "__id": 36,
+                                                    "__type": "com.locator.data::MapItem",
+                                                    "group_folder": "objects/barrels/",
+                                                    "id": 10,
+                                                    "pack": {
+                                                        "__type": "com.locator.logic::TextureTree",
+                                                        "__id": 7
+                                                    }
+                                                },
+                                                {
+                                                    "tiley": 0,
+                                                    "tilex": 0,
+                                                    "__id": 37,
+                                                    "__type": "com.locator.data::MapItem",
+                                                    "group_folder": "objects/barrels/",
+                                                    "id": 11,
+                                                    "pack": {
+                                                        "__type": "com.locator.logic::TextureTree",
+                                                        "__id": 7
+                                                    }
+                                                },
+                                                {
+                                                    "tiley": 0,
+                                                    "tilex": 0,
+                                                    "__id": 38,
+                                                    "__type": "com.locator.data::MapItem",
+                                                    "group_folder": "objects/barrels/",
+                                                    "id": 12,
+                                                    "pack": {
+                                                        "__type": "com.locator.logic::TextureTree",
+                                                        "__id": 7
+                                                    }
+                                                },
+                                                {
+                                                    "tiley": 0,
+                                                    "tilex": 0,
+                                                    "__id": 39,
+                                                    "__type": "com.locator.data::MapItem",
+                                                    "group_folder": "objects/barrels/",
+                                                    "id": 13,
+                                                    "pack": {
+                                                        "__type": "com.locator.logic::TextureTree",
+                                                        "__id": 7
+                                                    }
+                                                },
+                                                {
+                                                    "tiley": 0,
+                                                    "tilex": 0,
+                                                    "__id": 40,
+                                                    "__type": "com.locator.data::MapItem",
+                                                    "group_folder": "objects/barrels/",
+                                                    "id": 14,
+                                                    "pack": {
+                                                        "__type": "com.locator.logic::TextureTree",
+                                                        "__id": 7
+                                                    }
+                                                }
+                                            ],
+                                            "rotate": "off",
+                                            "title": "barrels & cases",
+                                            "tiley": 1,
+                                            "tilex": 1,
+                                            "__id": 27,
+                                            "__type": "com.locator.logic::TileGroup",
+                                            "blur": "off",
+                                            "y": 2,
+                                            "x": 2,
+                                            "folder": "objects/barrels/",
+                                            "shadow": "on"
+                                        },
+                                        "3": {
+                                            "tiles": [
+                                                "default"
+                                            ],
+                                            "rotate": "off",
+                                            "title": "stairs",
+                                            "tiley": 1,
+                                            "tilex": 1,
+                                            "__id": 43,
+                                            "__type": "com.locator.logic::TileGroup",
+                                            "blur": "off",
+                                            "y": 0,
+                                            "x": 0,
+                                            "folder": "objects/stairs/",
+                                            "shadow": "on"
+                                        },
+                                        "2": {
+                                            "tiles": [
+                                                "default"
+                                            ],
+                                            "rotate": "off",
+                                            "title": "altars & coffins",
+                                            "tiley": 1,
+                                            "tilex": 1,
+                                            "__id": 42,
+                                            "__type": "com.locator.logic::TileGroup",
+                                            "blur": "off",
+                                            "y": 2,
+                                            "x": 2,
+                                            "folder": "objects/altars/",
+                                            "shadow": "on"
+                                        },
+                                        "5": {
+                                            "tiles": [
+                                                "default"
+                                            ],
+                                            "rotate": "off",
+                                            "title": "armory",
+                                            "tiley": 1,
+                                            "tilex": 1,
+                                            "__id": 45,
+                                            "__type": "com.locator.logic::TileGroup",
+                                            "blur": "off",
+                                            "y": 2,
+                                            "x": 2,
+                                            "folder": "objects/armory/",
+                                            "shadow": "on"
+                                        },
+                                        "4": {
+                                            "tiles": [
+                                                "default"
+                                            ],
+                                            "rotate": "off",
+                                            "title": "columns",
+                                            "tiley": 1,
+                                            "tilex": 1,
+                                            "__id": 44,
+                                            "__type": "com.locator.logic::TileGroup",
+                                            "blur": "off",
+                                            "y": 2,
+                                            "x": 2,
+                                            "folder": "objects/columns/",
+                                            "shadow": "on"
+                                        },
+                                        "7": {
+                                            "tiles": [
+                                                "default"
+                                            ],
+                                            "rotate": "off",
+                                            "title": "other",
+                                            "tiley": 1,
+                                            "tilex": 1,
+                                            "__id": 47,
+                                            "__type": "com.locator.logic::TileGroup",
+                                            "blur": "off",
+                                            "y": 2,
+                                            "x": 2,
+                                            "folder": "objects/other/",
+                                            "shadow": "on"
+                                        },
+                                        "6": {
+                                            "tiles": [
+                                                "default"
+                                            ],
+                                            "rotate": "off",
+                                            "title": "beds",
+                                            "tiley": 1,
+                                            "tilex": 1,
+                                            "__id": 46,
+                                            "__type": "com.locator.logic::TileGroup",
+                                            "blur": "off",
+                                            "y": 2,
+                                            "x": 2,
+                                            "folder": "objects/bads/",
+                                            "shadow": "on"
+                                        },
+                                        "__type": "Object"
+                                    }
+                                },
+                                "terrain": {
+                                    "__type": "com.locator.logic::TextureMode",
+                                    "__id": 48,
+                                    "groups": {
+                                        "__type": "Object",
+                                        "__id": 49
+                                    }
+                                },
+                                "__id": 8,
+                                "walls": {
+                                    "__type": "com.locator.logic::TextureMode",
+                                    "__id": 13,
+                                    "groups": {
+                                        "0": {
+                                            "tiles": [
+                                                "default"
+                                            ],
+                                            "rotate": "off",
+                                            "title": "stone walls",
+                                            "tiley": 1,
+                                            "tilex": 1,
+                                            "__id": 15,
+                                            "__type": "com.locator.logic::TileGroup",
+                                            "blur": "on",
+                                            "y": 0,
+                                            "x": 0,
+                                            "folder": "walls/stone/",
+                                            "shadow": "on"
+                                        },
+                                        "__type": "Object",
+                                        "__id": 14
+                                    }
+                                },
+                                "__type": "Object"
+                            },
+                            "title": "favorite",
+                            "__id": 7,
+                            "pb": 200,
+                            "pa": 200,
+                            "__type": "com.locator.logic::TextureTree",
+                            "shadow": 30,
+                            "folder": "favorite"
+                        }
+                    },
+                    "blur": "off",
+                    "y": 2,
+                    "x": 2,
+                    "shadow": "on"
+                },
+                "__type": "com.d_paint.data::Layer",
+                "id": "Layer2",
+                "__id": 3
+            },
+            {
+                "data": {
+                    "actual": {
+                        "__type": "com.locator.data::MapItem",
+                        "__id": 19
+                    },
+                    "__type": "com.locator.objs::Plot",
+                    "begin": {
+                        "y": 5,
+                        "x": 12,
+                        "__type": "flash.geom::Point",
+                        "__id": 52
+                    },
+                    "end": {
+                        "y": 9,
+                        "x": 21,
+                        "__type": "flash.geom::Point",
+                        "__id": 53
+                    },
+                    "__id": 51
+                },
+                "__type": "com.d_paint.data::Layer",
+                "id": "Layer1",
+                "__id": 50
+            }
+        ],
+        "__type": "com.bongo.layers.logic::Bunch",
+        "id": "root",
+        "__id": 2
+    },
+    "__type": "com.d_paint.data::Location",
+    "__id": 1
+}

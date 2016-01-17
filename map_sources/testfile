@@ -1,0 +1,98 @@
+{
+    "layers": [
+        {
+            "edge_material": null,
+            "minstep": 1,
+            "shapes": [
+                {
+                    "basex": 0,
+                    "basey": 0,
+                    "type": "BasicPolygon",
+                    "vertices": [
+                        {
+                            "y": 0,
+                            "x": 0,
+                            "type": "BasicPoint"
+                        },
+                        {
+                            "y": 100,
+                            "x": 0,
+                            "type": "BasicPoint"
+                        },
+                        {
+                            "y": 100,
+                            "x": 100,
+                            "type": "BasicPoint"
+                        },
+                        {
+                            "y": 0,
+                            "x": 100,
+                            "type": "BasicPoint"
+                        }
+                    ]
+                }
+            ],
+            "basex": 0,
+            "basey": 0,
+            "type": "Layer",
+            "core_material": ":"
+        },
+        {
+            "edge_material": "#",
+            "minstep": 1,
+            "shapes": [
+                {
+                    "basex": 0,
+                    "basey": 0,
+                    "type": "BasicPolygon",
+                    "vertices": [
+                        {
+                            "y": 25,
+                            "x": 25,
+                            "type": "BasicPoint"
+                        },
+                        {
+                            "y": 75,
+                            "x": 25,
+                            "type": "BasicPoint"
+                        },
+                        {
+                            "y": 75,
+                            "x": 75,
+                            "type": "BasicPoint"
+                        },
+                        {
+                            "y": 25,
+                            "x": 75,
+                            "type": "BasicPoint"
+                        }
+                    ]
+                }
+            ],
+            "basex": 2,
+            "basey": 2,
+            "type": "Layer",
+            "core_material": "~"
+        },
+        {
+            "edge_material": null,
+            "minstep": 1,
+            "shapes": [
+                {
+                    "basex": 50,
+                    "radius": 20,
+                    "type": "BasicCircle",
+                    "basey": 50
+                }
+            ],
+            "basex": 2,
+            "basey": 2,
+            "type": "Layer",
+            "core_material": "#"
+        }
+    ],
+    "width": 100,
+    "type": "Map",
+    "minstep": 1,
+    "height": 100
+}

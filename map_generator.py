@@ -47,79 +47,7 @@ class ComplexEncoder(json.JSONEncoder):
 	def default(self, obj):
 		return obj.__dict__
 
-# Base Map Shapes
-class BasicPoint:
-	def __init__(self,x,y):
-		self.type = self.__class__.__name__
-		self.x = x
-		self.y = y
-
-def basicpoint_decoder(dictonary):
-	if 'type' in dictonary and dictonary['type'] == 'BasicPoint':
-		to_return = BasicPoint(dictonary['x'], dictonary['y'])
-		return to_return
-	return dictonary
-
-class BasicPolygon:
-	def __init__(self,points=None,basex=None,basey=None):
-		if basex == None: basex = 0
-		if basey == None: basey = 0
-		if points == None: points = []
-		self.type = self.__class__.__name__
-		self.points = points
-		self.basex = basex
-		self.basey = basey
-		
-	def is_walkable(self):
-		return False
-
-	def get_polygon(self,minstep):
-		points = []
-		for point in self.points:
-			points.append(Point(point.x,point.y))
-		return Polygon(*points)
-
-def basicpolygon_decoder(dictonary):
-	if 'type' in dictonary and dictonary['type'] == 'BasicPolygon':
-		to_return = BasicPolygon(None,dictonary['basex'], dictonary['basey'])
-		for point in dictonary['points']:
-			to_return.points.append(basicpoint_decoder(point))
-		return to_return
-	return dictonary
-
-class BasicCircle:
-	def __init__(self,radius,basex=None,basey=None):
-		if basex == None: basex = 0
-		if basey == None: basey = 0
-		self.type = self.__class__.__name__
-		self.radius = radius
-		self.basex = basex
-		self.basey = basey
-		
-	def is_walkable(self):
-		return False
-
-	def get_polygon(self,minstep):
-		points = []
-		#Use law of the cosines to determine the angle of each step change
-		angle_change = math.acos((math.pow(minstep,2)-2*math.pow(self.radius,2))/(-1*2*math.pow(self.radius,2)))
-		current_angle = math.asin((self.radius*math.sin(angle_change))/minstep)
-		#Generate the points on the circle
-		cur_point = Point(self.basex - self.radius,self.basey)
-		for count in range(int(2*math.pi/angle_change)):
-			points.append(cur_point)
-			cur_point = Point(cur_point.x + minstep*math.cos(current_angle),cur_point.y + minstep*math.sin(current_angle))
-			current_angle -= angle_change
-		return Polygon(*points)
-
-def basiccircle_decoder(dictonary):
-	if 'type' in dictonary and dictonary['type'] == 'BasicCircle':
-		to_return = BasicCircle(dictonary['radius'],dictonary['basex'], dictonary['basey'])
-		return to_return
-	return dictonary
-
-		
-class WalkableRectangle:
+class WalkableRectangle(object):
 	def __init__(self,minstep,startx,starty,endx,endy,st_o_r_len,st_i_r_len=None,st_o_l_len=None,st_i_l_len=None,st_offest=None,en_o_r_len=None,en_i_r_len=None,en_o_l_len=None,en_i_l_len=None, en_offest=None):
 		#Based on what's missing fill in the gaps
 		if st_i_r_len == None:	st_i_r_len = st_o_r_len -2*minstep
@@ -156,7 +84,7 @@ def walkablerectangle_decoder(dictonary):
 		to_return = WalkableRectangle(dictonary['minstep'], dictonary['startx'], dictonary['starty'], dictonary['endx'], dictonary['endy'], dictonary['st_o_r_len'], dictonary['st_i_r_len'], dictonary['st_o_l_len'], dictonary['st_i_l_len'], dictonary['st_offest'], dictonary['en_o_r_len'], dictonary['en_i_r_len'], dictonary['en_o_l_len'], dictonary['en_i_l_len'], dictonary['en_offest'])
 	return dictonary
 
-class WalkableCircle:
+class WalkableCircle(object):
 	def __init__(self,minstep,basex,basey,outer_radius,inner_radius=None):
 		if inner_radius == None: inner_radius = outer_radius - 2*minstep
 		self.type = self.__class__.__name__
@@ -186,7 +114,7 @@ def shape_decoder(dictonary):
 		return basiccircle_decoder(dictonary)
 	return dictonary
 
-class Layer:
+class Layer(object):
 	def __init__(self,basex,basey,minstep, core_material, edge_material=None):
 		self.type = self.__class__.__name__
 		self.basex = basex
@@ -221,7 +149,7 @@ def layer_decoder(dictonary):
 		return to_return
 	return dictonary
 
-class Map:
+class Map(object):
 	
 	def __init__(self,height,width,minstep):
 		self.type = self.__class__.__name__
