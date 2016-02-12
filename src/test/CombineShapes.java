@@ -5,7 +5,10 @@ import java.awt.Component;
 import java.awt.Frame;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.awt.Shape;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.awt.geom.Arc2D;
 import java.awt.geom.Area;
 import java.awt.geom.Ellipse2D;
@@ -23,7 +26,8 @@ public class CombineShapes {
 	  JFrame frame = new JFrame();
 	
 	  // Add a component with a custom paint method
-	  frame.add(new CustomPaintComponent());
+	  CustomPaintComponent comp = new CustomPaintComponent();
+	  frame.add(comp);
 	
 	  // Display the frame
 	  int frameWidth = 300;
@@ -31,6 +35,7 @@ public class CombineShapes {
 	  frame.setSize(frameWidth, frameHeight);
 	  frame.setVisible(true);
 	  frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	  frame.addComponentListener(comp);
     }
 
     /**
@@ -39,7 +44,7 @@ public class CombineShapes {
      * by the windowing system whenever component's area needs to be repainted.
      */
     
-    static class CustomPaintComponent extends Component {
+    static class CustomPaintComponent extends Component implements ComponentListener {
 
     	public void paint(Graphics g) {
 
@@ -60,7 +65,7 @@ public class CombineShapes {
 		
 		    Shape line = new Line2D.Float(x, y, w, h);
 		    Shape oval = new Ellipse2D.Float(x, y, w, h);
-		    Shape rectangle = new Rectangle2D.Float(x, y, w, h);
+		    Shape rectangle = new Rectangle2D.Float(x, y+h/4, 2*w, h/2);
 		    Shape roundRectangle = new RoundRectangle2D.Float(x, y, w, h, w/2, h/2);
 		
 		    // A start angle of 0 represents a 3 o'clock position, 90 represents a 12 o'clock position,
@@ -72,13 +77,35 @@ public class CombineShapes {
 		    Area shape = new Area(line);
 		    shape.add(new Area(oval));
 		    shape.subtract(new Area(rectangle));
-		    shape.intersect(new Area(roundRectangle));
-		    shape.exclusiveOr(new Area(arc));
+		    //shape.intersect(new Area(roundRectangle));
+		    //shape.exclusiveOr(new Area(arc));
 		    g2d.setPaint(Color.RED);
 		    g2d.fill(shape);
 
     	}
+    	
+    	public void componentResized(ComponentEvent arg0) {
+    	    int W = 4;  
+    	    int H = 3;  
+    	    Rectangle b = arg0.getComponent().getBounds();
+    	    arg0.getComponent().setBounds(b.x, b.y, b.width, b.width);
+    	    repaint();
 
+    	}
+
+		public void componentHidden(ComponentEvent arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public void componentMoved(ComponentEvent arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public void componentShown(ComponentEvent arg0) {
+			// TODO Auto-generated method stub
+			
+		}
 	}
-
 }
