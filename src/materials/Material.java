@@ -6,11 +6,11 @@ import java.awt.geom.Area;
 
 import test.TestGUIManager;
 
-abstract public class MaterialBase {
+abstract public class Material {
 
 	protected Color color;
 	
-	protected MaterialBase(Color c){
+	protected Material(Color c){
 		color = c;
 	}
 	

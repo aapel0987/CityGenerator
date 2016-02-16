@@ -10,6 +10,9 @@ import java.util.LinkedList;
 import java.util.List;
 
 import area_constructors.BasicShapeConstructor;
+import area_constructors.BasicWaterConstructor;
+import map_structure.Group;
+import map_structure.Layer;
 import materials.MaterialPoint;
 import materials.MaterialsCollection;
 
@@ -21,10 +24,22 @@ public class MainTestClass {
 		//TestFillBlueBullseye();
 		//TestDrawBlueBullseye();
 		//TestFillBullseysWithSand();
-		TestFillBullseysWithGrass();
+		//TestFillBullseysWithGrass();
 		//TestGetIntersectionPoint();
+		TestDrawMap();
 	}
 
+	private static void TestDrawMap(){
+		Group map = new Group();
+		Layer mapBase = new Layer(MaterialsCollection.Grass,0,0,150,100);
+		map.add(mapBase);
+		map.add(BasicWaterConstructor.createSimpleRiver(new double[]{75,0,25,75,100,25,75,100},10));
+		map.crop(mapBase);
+		
+		TestGUIManager gui = new TestGUIManager("TestDrawMap");
+		map.render(gui);
+	}
+	
 	private static void TestFillBlueBullseye(){
 
 		TestGUIManager gui = new TestGUIManager("TestFillBlueBullseye");
@@ -35,7 +50,7 @@ public class MainTestClass {
 
 		TestGUIManager gui = new TestGUIManager("TestDrawBlueBullseye");
 		Area bullseye = BasicShapeConstructor.createBullseye(new Point2D.Double(50,50) ,100, 1, true);
-		List<Line2D> lines = BasicShapeConstructor.MyGetAreaLines(bullseye,0.1,true);
+		List<Line2D> lines = BasicShapeConstructor.getAreaLines(bullseye,0.1,true);
 		List<Area> areas = new LinkedList<Area>();
 		Iterator<Line2D> iter = lines.iterator();
 		while(iter.hasNext()){

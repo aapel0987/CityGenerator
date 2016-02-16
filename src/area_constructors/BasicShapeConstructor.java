@@ -1,5 +1,6 @@
 package area_constructors;
 
+import java.awt.Polygon;
 import java.awt.geom.Area;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
@@ -8,6 +9,7 @@ import java.awt.geom.PathIterator;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
@@ -15,28 +17,50 @@ final public class BasicShapeConstructor {
 
 	private final static int threadcount = 5;
 	
-	public static Area BasicConnectedCircles(ArrayList<Point2D> points, double radius) {
+	public static Area basicConnectedCircles(List<Point2D> points, double radius) {
 		double[] radii = new double[points.size()];
 		for(int index = 0; index < radii.length; index++){
 			radii[index] = radius;
 		}
-		return BasicConnectedCircles(points,radii);
+		return basicConnectedCircles(points,radii);
+	}
+
+	public static Area basicConnectedCircles(Point2D points[], double radius) {
+		double[] radii = new double[points.length];
+		for(int index = 0; index < radii.length; index++){
+			radii[index] = radius;
+		}
+		return basicConnectedCircles(points,radii);
 	}
 	
-	public static Area BasicConnectedCircles(ArrayList<Point2D> points, double radii[]) {
+	public static Area basicConnectedCircles(Point2D points[], double radii[]) {
+		ArrayList<Point2D> pointsList = new ArrayList<Point2D>();
+		for(int index = 0; index < points.length; index++){
+			pointsList.add(points[index]);	
+		}
+		return basicConnectedCircles(pointsList,radii);
+	}
+	
+	public static Area basicConnectedCircles(List<Point2D> points, double radii[]) {
 		//First, connect all of the points
-		Area toReturn = connectPoints(points,radii);
+		double widths[] = new double[radii.length];
+		for(int index = 0; index < widths.length; index++){
+			widths[index] = radii[index]*((double)2.0);
+		}
+		Area toReturn = connectPoints(points,widths);
 		// Now for each point add a circle of the correct size
 		Iterator<Point2D> iterator = points.iterator();
+		LinkedList<Area> returnAreas = new LinkedList<Area>();
 		int index = 0;
 		while(iterator.hasNext()){
 			Point2D point = iterator.next();
-			toReturn.add(new Area(new Ellipse2D.Double(point.getX(), point.getY(), 2*radii[index], 2*radii[index++])));
+			returnAreas.add(new Area(new Ellipse2D.Double(point.getX() - radii[index], point.getY() - radii[index], 2*radii[index], 2*radii[index++])));
 		}
+		toReturn.add(combineAreasParallel(returnAreas));
 		return toReturn;
 	}
 	
-	public static Area connectPoints(ArrayList<Point2D> points, double widths[]){
+	public static Area connectPoints(List<Point2D> points, double widths[]){
 		//The format of the input array is assumed to be as follows
 		//For each element in the array there is a sub-array with three values:
 		//	The first is the X-Coordinate
@@ -47,7 +71,7 @@ final public class BasicShapeConstructor {
 			throw new IllegalArgumentException("Array lengths provided to 'addConnections' must match.");
 		}
 		Iterator<Point2D> iterator = points.iterator();
-		Area returnArea = new Area();
+		LinkedList<Area> returnAreas = new LinkedList<Area>();
 		int index = 0;
 		if(iterator.hasNext()){
 			Point2D startPoint = iterator.next();
@@ -60,12 +84,12 @@ final public class BasicShapeConstructor {
 				//which involves some geometry. Pretty sure this is correct.
 				//Pull values for easier reading
 				Point2D endPoint = iterator.next();
-				returnArea.add(connectPoints(startPoint,widths[index],endPoint,widths[++index]));
+				returnAreas.add(connectPoints(startPoint,widths[index],endPoint,widths[++index]));
 				startPoint = endPoint;
 			}
 		}
 		
-		return returnArea;
+		return combineAreasParallel(returnAreas);
 	}
 	
 	public static Area connectPoints(Point2D point1, double w1, Point2D point2, double w2){
@@ -74,10 +98,14 @@ final public class BasicShapeConstructor {
 		//Now since there is no double precision polygon, we use a double path instead
 		Path2D path = new Path2D.Double();
 		//Now manually add all of the points to that path
-		path.moveTo(point1.getX()+(w1/2)*Math.cos(theta), point1.getY()+(w1/2)*Math.sin(theta));
-		path.lineTo(point2.getX()+(w2/2)*Math.cos(theta), point2.getY()+(w2/2)*Math.sin(theta));
-		path.lineTo(point2.getX()-(w2/2)*Math.cos(theta), point2.getY()-(w2/2)*Math.sin(theta));
-		path.lineTo(point1.getX()-(w1/2)*Math.cos(theta), point1.getY()-(w1/2)*Math.sin(theta));
+		Point2D p1 = new Point2D.Double(point1.getX()+(w1/2)*Math.cos(theta), point1.getY()-(w1/2)*Math.sin(theta));
+		Point2D p2 = new Point2D.Double(point2.getX()+(w2/2)*Math.cos(theta), point2.getY()-(w2/2)*Math.sin(theta));
+		Point2D p3 = new Point2D.Double(point2.getX()-(w2/2)*Math.cos(theta), point2.getY()+(w2/2)*Math.sin(theta));
+		Point2D p4 = new Point2D.Double(point1.getX()-(w1/2)*Math.cos(theta), point1.getY()+(w1/2)*Math.sin(theta));
+		path.moveTo(p1.getX(),p1.getY());
+		path.lineTo(p2.getX(),p2.getY());
+		path.lineTo(p3.getX(),p3.getY());
+		path.lineTo(p4.getX(),p4.getY());
 		path.closePath();
 		//Lastly, add this to the current Area
 		return new Area(path);
@@ -167,64 +195,90 @@ final public class BasicShapeConstructor {
 		result.add(combineAreasRecursive(list.subList(list.size()/2, list.size())));
 		return result;
 	}
-	
 
-	public static ArrayList<Line2D> getAreaLines(Area area, double separation){
-		//Code Taken From Stackoverflow, with modifications
-		//http://stackoverflow.com/questions/8144156/using-pathiterator-to-return-all-line-segments-that-constrain-an-area
-		//Accessed: 1/28/2016
-		ArrayList<double[]> areaPoints = new ArrayList<double[]>();
-		ArrayList<Line2D> areaSegments = new ArrayList<Line2D>();
+	public static ArrayList<Path2D> getAreaPaths(Area area){
+		ArrayList<Path2D> paths = new ArrayList<Path2D>();
 		double[] coords = new double[6];
-
-		for (PathIterator pi = area.getPathIterator(null, separation); !pi.isDone(); pi.next()) {
+		Path2D currentPath = null;
+		for (PathIterator iter = area.getPathIterator(null); !iter.isDone(); iter.next()) {
 		    // The type will be SEG_LINETO, SEG_MOVETO, or SEG_CLOSE
 		    // Because the Area is composed of straight lines
-		    int type = pi.currentSegment(coords);
-		    // We record a double array of {segment type, x coord, y coord}
-		    double[] pathIteratorCoords = {type, coords[0], coords[1]};
-		    areaPoints.add(pathIteratorCoords);
+			int type = iter.currentSegment(coords);
+		    switch(type){
+		    	case PathIterator.SEG_MOVETO:
+		    		currentPath = new Path2D.Double();
+		    		currentPath.moveTo(coords[0], coords[1]);
+		    		paths.add(currentPath);
+		    		break;
+		    	case PathIterator.SEG_CLOSE:
+		    		currentPath.closePath();
+		    		break;
+		    	case PathIterator.SEG_LINETO:
+		    		currentPath.lineTo ( coords[0], coords[1]);
+		    		break;
+		    	case PathIterator.SEG_QUADTO:
+		        	currentPath.quadTo ( coords[0], coords[1], coords[2], coords[3]);
+		        	break;
+		        case PathIterator.SEG_CUBICTO:
+		        	currentPath.curveTo( coords[0], coords[1], coords[2], coords[3], coords[4], coords[5]);
+		        	break;
+		    }
+		}
+		return paths;
+	}
+	
+	public static ArrayList<Line2D> path2DToLines(Path2D path, double separation){
+		ArrayList<Line2D> pathSegments = new ArrayList<Line2D>();
+		double[] coords = new double[6];
+		Point2D startPoint = null, previousPoint = null;
+		for (PathIterator iter = path.getPathIterator(null, separation); !iter.isDone(); iter.next()) {
+		    // The type will be SEG_LINETO, SEG_MOVETO, or SEG_CLOSE
+		    // Because the Area is composed of straight lines
+			int type = iter.currentSegment(coords);
+			Point2D currentPoint = new Point2D.Double(coords[0], coords[1]);
+		    switch(type){
+		    	case PathIterator.SEG_MOVETO:
+		    		startPoint = (Point2D) currentPoint.clone();
+		    		break;
+		    	case PathIterator.SEG_CLOSE:
+		    		pathSegments.add(new Line2D.Double(previousPoint,startPoint));
+		    		break;
+		    	default:	//This will be some form of line
+		    		pathSegments.add(new Line2D.Double(previousPoint,currentPoint));
+		    }
+		    
+		    previousPoint = currentPoint;
 		}
 
-		double[] start = new double[3]; // To record where each polygon starts
-
-		for (int i = 0; i < areaPoints.size(); i++) {
-		    // If we're not on the last point, return a line from this point to the next
-		    double[] currentElement = areaPoints.get(i);
-
-		    // We need a default value in case we've reached the end of the ArrayList
-		    double[] nextElement = {-1, -1, -1};
-		    if (i < areaPoints.size() - 1) {
-		        nextElement = areaPoints.get(i + 1);
-		    }
-
-		    // Make the lines
-		    if (currentElement[0] == PathIterator.SEG_MOVETO) {
-		        start = currentElement; // Record where the polygon started to close it later
-		    } 
-
-		    if (nextElement[0] == PathIterator.SEG_LINETO) {
-		        areaSegments.add(
-		                new Line2D.Double(
-		                    currentElement[1], currentElement[2],
-		                    nextElement[1], nextElement[2]
-		                )
-		            );
-		    } else if (nextElement[0] == PathIterator.SEG_CLOSE) {
-		        areaSegments.add(
-		                new Line2D.Double(
-		                    currentElement[1], currentElement[2],
-		                    start[1], start[2]
-		                )
-		            );
-		    }
+		return pathSegments;
+	}
+	
+	public static ArrayList<Line2D> getAreaLines(Area area, double separation, boolean connectParts){
+		ArrayList<Line2D> areaSegments = new ArrayList<Line2D>();
+		List<Path2D> paths = getAreaPaths(area);
+		Iterator<Path2D> pathsIter = paths.iterator();
+		if(pathsIter.hasNext()){
+			areaSegments.addAll(path2DToLines(pathsIter.next(),separation));
+			while(pathsIter.hasNext()){
+				List<Line2D> newLines = path2DToLines(pathsIter.next(),separation);
+				if(newLines.size() > 0){
+					if(connectParts){
+						if(areaSegments.get(0).getP1() != areaSegments.get(areaSegments.size()-1).getP2()){
+							areaSegments.add(new Line2D.Double(areaSegments.get(areaSegments.size()-1).getP2(),areaSegments.get(0).getP1()));
+						}
+						areaSegments.add(new Line2D.Double(areaSegments.get(0).getP1(),newLines.get(0).getP1()));
+					}
+					areaSegments.addAll(newLines);
+				}
+			}
+			if(areaSegments.get(0).getP1() != areaSegments.get(areaSegments.size()-1).getP2()){
+				areaSegments.add(new Line2D.Double(areaSegments.get(areaSegments.size()-1).getP2(),areaSegments.get(0).getP1()));
+			}
 		}
 		return areaSegments;
 	}
 	
-
-
-	public static ArrayList<Line2D> MyGetAreaLines(Area area, double separation, boolean connectParts){
+	public static ArrayList<Line2D> oldGetAreaLines(Area area, double separation, boolean connectParts){
 		ArrayList<Line2D> areaSegments = new ArrayList<Line2D>();
 		double[] coords = new double[6];
 		Point2D centerPoint = null, startPoint = null, previousPoint = null;

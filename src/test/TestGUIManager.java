@@ -18,6 +18,7 @@ import java.awt.geom.Rectangle2D;
 import java.awt.geom.RoundRectangle2D;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 
@@ -62,6 +63,14 @@ public class TestGUIManager {
     
 	public void addShape(Shape s, Color c){
 		comp.addShape( s, c);
+	}
+	
+	public void addPoints(Point2D points[], double radius, Color color){
+		LinkedList<Area> pointAreas = new LinkedList<Area>();
+		for(int index = 0; index < points.length; index++){
+			pointAreas.add(new Area(new Ellipse2D.Double(points[index].getX() -radius, points[index].getY() -radius, 2*radius, 2*radius)));
+		}
+		addShape(BasicShapeConstructor.combineAreasParallel(pointAreas),color);
 	}
 	
     /**

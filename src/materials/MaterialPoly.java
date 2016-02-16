@@ -14,7 +14,7 @@ import java.util.List;
 import area_constructors.BasicShapeConstructor;
 import test.TestGUIManager;
 
-public class MaterialPoly extends MaterialBase {
+public class MaterialPoly extends Material {
 
 	public MaterialPoly(Color c) {
 		super(c);
@@ -23,7 +23,7 @@ public class MaterialPoly extends MaterialBase {
 	@Override
 	public void renderFill(TestGUIManager gui, Area area){
 		gui.addShape(area, color);
-		gui.addShape(BasicShapeConstructor.combineAreasParallel(StrokeLines(BasicShapeConstructor.MyGetAreaLines(area, 0.1,true))), Color.BLACK);
+		gui.addShape(BasicShapeConstructor.combineAreasParallel(StrokeLines(BasicShapeConstructor.getAreaLines(area, 0.1,true))), Color.BLACK);
 	}
 
 	private static List<Area> StrokeLines(List<Line2D> lines){

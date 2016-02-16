@@ -14,7 +14,7 @@ import java.util.List;
 import area_constructors.BasicShapeConstructor;
 import test.TestGUIManager;
 
-public class MaterialPoint extends MaterialBase {
+public class MaterialPoint extends Material {
 
 	private double radius;
 
@@ -70,7 +70,7 @@ public class MaterialPoint extends MaterialBase {
 		}
 
 		//Next step is to iterate over all of the vertical and horizontal lines and collect any intersections
-		List<Line2D> edges = BasicShapeConstructor.getAreaLines(area, separation);
+		List<Line2D> edges = BasicShapeConstructor.getAreaLines(area, separation,false);
 		for(double currentY = y1; currentY <= y2; currentY += separation){
 			Line2D currentLine = new Line2D.Double(x1, currentY, x2, currentY);
 			Iterator<Line2D> iterator = edges.iterator();
