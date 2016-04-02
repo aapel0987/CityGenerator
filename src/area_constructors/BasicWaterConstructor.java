@@ -11,11 +11,14 @@ import map_structure.Group;
 import map_structure.Layer;
 import materials.Material;
 import materials.MaterialsCollection;
+import test.TestGUIManager;
 
 public final class BasicWaterConstructor extends Constructor {
 
 	private final static Material water = MaterialsCollection.Water;
 	private final static Material sand  = MaterialsCollection.Sand;
+	
+	private final TestGUIManager gui = new TestGUIManager("TestDrawMap");
 	
 	public static Group createSimpleRiver(double points[], double width){
 		if(points.length%2 != 0)
@@ -29,7 +32,7 @@ public final class BasicWaterConstructor extends Constructor {
 	
 	public static Group createSimpleRiver(List<Point2D> points, double width){
 		Group river = new Group();
-		Layer waterLayer = new Layer(water,BasicShapeConstructor.basicConnectedCircles(points, width/2));
+		Layer waterLayer = new Layer(water,BasicShapeModifier.distortArea(BasicShapeConstructor.basicConnectedCircles(points, width/2),0.5,0.25));
 		Layer sandLayer = new Layer(sand,new Area((new BasicStroke(1)).createStrokedShape(waterLayer)));
 		river.add(waterLayer);
 		river.add(sandLayer);

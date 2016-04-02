@@ -5,11 +5,14 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import area_constructors.Constructor;
 import test.TestGUIManager;
 
 public class Group implements Generateable {
 
 	private List<Generateable> members;
+	
+	private Constructor constructor;
 	
 	public Group(){
 		members = new LinkedList<Generateable>();

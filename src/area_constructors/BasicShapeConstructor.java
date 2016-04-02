@@ -1,17 +1,20 @@
 package area_constructors;
 
-import java.awt.Polygon;
+import java.awt.Color;
 import java.awt.geom.Area;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
 import java.awt.geom.PathIterator;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+
+import test.TestGUIManager;
 
 final public class BasicShapeConstructor {
 
@@ -54,10 +57,14 @@ final public class BasicShapeConstructor {
 		int index = 0;
 		while(iterator.hasNext()){
 			Point2D point = iterator.next();
-			returnAreas.add(new Area(new Ellipse2D.Double(point.getX() - radii[index], point.getY() - radii[index], 2*radii[index], 2*radii[index++])));
+			returnAreas.add(basicCircle(point,radii[index++]));
 		}
 		toReturn.add(combineAreasParallel(returnAreas));
 		return toReturn;
+	}
+	
+	public static Area basicCircle(Point2D center, double radius){
+		return new Area(new Ellipse2D.Double(center.getX() - radius, center.getY() - radius, 2*radius, 2*radius));
 	}
 	
 	public static Area connectPoints(List<Point2D> points, double widths[]){
@@ -206,6 +213,9 @@ final public class BasicShapeConstructor {
 			int type = iter.currentSegment(coords);
 		    switch(type){
 		    	case PathIterator.SEG_MOVETO:
+		    		if(currentPath != null){
+		    			currentPath.closePath();
+		    		}
 		    		currentPath = new Path2D.Double();
 		    		currentPath.moveTo(coords[0], coords[1]);
 		    		paths.add(currentPath);
@@ -259,8 +269,13 @@ final public class BasicShapeConstructor {
 		Iterator<Path2D> pathsIter = paths.iterator();
 		if(pathsIter.hasNext()){
 			areaSegments.addAll(path2DToLines(pathsIter.next(),separation));
+			int index = 0;
+			//TestGUIManager gui = new TestGUIManager("getAreaLines: " + index++);
+			//gui.addLines(areaSegments,Color.black);
 			while(pathsIter.hasNext()){
 				List<Line2D> newLines = path2DToLines(pathsIter.next(),separation);
+				//gui = new TestGUIManager("getAreaLines: " + index++);
+				//gui.addLines(newLines,Color.black);
 				if(newLines.size() > 0){
 					if(connectParts){
 						if(areaSegments.get(0).getP1() != areaSegments.get(areaSegments.size()-1).getP2()){
@@ -271,53 +286,100 @@ final public class BasicShapeConstructor {
 					areaSegments.addAll(newLines);
 				}
 			}
-			if(areaSegments.get(0).getP1() != areaSegments.get(areaSegments.size()-1).getP2()){
+			if(areaSegments.get(0).getP1() != areaSegments.get(areaSegments.size()-1).getP2() && connectParts){
 				areaSegments.add(new Line2D.Double(areaSegments.get(areaSegments.size()-1).getP2(),areaSegments.get(0).getP1()));
 			}
 		}
 		return areaSegments;
 	}
 	
-	public static ArrayList<Line2D> oldGetAreaLines(Area area, double separation, boolean connectParts){
-		ArrayList<Line2D> areaSegments = new ArrayList<Line2D>();
-		double[] coords = new double[6];
-		Point2D centerPoint = null, startPoint = null, previousPoint = null;
-		for (PathIterator iter = area.getPathIterator(null, separation); !iter.isDone(); iter.next()) {
-		    // The type will be SEG_LINETO, SEG_MOVETO, or SEG_CLOSE
-		    // Because the Area is composed of straight lines
-			int type = iter.currentSegment(coords);
-			Point2D currentPoint = new Point2D.Double(coords[0], coords[1]);
-		    switch(type){
-		    	case PathIterator.SEG_MOVETO:
-		    		startPoint = (Point2D) currentPoint.clone();
-		    		if(connectParts){
-		    			if(centerPoint == null) centerPoint = (Point2D) startPoint.clone();
-		    			else {
-		    				if(!previousPoint.equals(centerPoint)){
-		    					areaSegments.add(new Line2D.Double(previousPoint,centerPoint));
-		    					//System.out.println("Prev to Center");
-		    				}
-		    				areaSegments.add(new Line2D.Double(centerPoint,startPoint));
-		    				//System.out.println("Center to Start");
-		    			}
-		    		}
-		    		break;
-		    	case PathIterator.SEG_CLOSE:
-		    		areaSegments.add(new Line2D.Double(previousPoint,startPoint));
-		    		break;
-		    	default:	//This will be some form of line
-		    		areaSegments.add(new Line2D.Double(previousPoint,currentPoint));
-		    }
-		    
-		    previousPoint = currentPoint;
-		}
+	
+	public static List<Point2D> getPointsInArea(Area area, double separation){
+		Rectangle2D bounds = area.getBounds2D();
+		ArrayList<Point2D> internalPoints = new ArrayList<Point2D>();
+		double x1 = bounds.getMinX();
+		double x2 = bounds.getMaxX();
+		double y1 = bounds.getMinY();
+		double y2 = bounds.getMaxY();
 
-		//Now that we have all edges, the last step is to connect the last section to the center
-		if(centerPoint != null && !centerPoint.equals(previousPoint)){
-			areaSegments.add(new Line2D.Double(previousPoint,centerPoint));
-			//System.out.println("Last to Center");
+		//Fully Center the Proposed Grid on the Shape
+		x1 += ((x2-x1)%separation/((double) 2));
+		y1 += ((y2-y1)%separation/((double) 2));
+		
+		//Generate all the points in the bounds, check if it's in the area, and then add if it is
+		for(double currentY = y1; currentY <= y2; currentY += separation){
+			for(double currentX = x1; currentX <= x2; currentX += separation){
+				Point2D point = new Point2D.Double(currentX,currentY);
+				if(area.contains(point)){
+					internalPoints.add(point);
+				}
+			}
 		}
 		
-		return areaSegments;
+		return internalPoints;
 	}
+
+	public static List<Point2D> getAreaEdgePoints(Area area, double separation){
+		Rectangle2D bounds = area.getBounds2D();
+		ArrayList<Point2D> internalPoints = new ArrayList<Point2D>();
+		double x1 = bounds.getMinX();
+		double x2 = bounds.getMaxX();
+		double y1 = bounds.getMinY();
+		double y2 = bounds.getMaxY();
+		
+		//Next step is to iterate over all of the vertical and horizontal lines and collect any intersections
+		List<Line2D> edges = BasicShapeConstructor.getAreaLines(area, separation,false);
+		//TestGUIManager gui = new TestGUIManager("getAreaEdgePoints");
+		//gui.addLines(edges,Color.black);
+		for(double currentY = y1; currentY <= y2; currentY += separation){
+			Line2D currentLine = new Line2D.Double(x1, currentY, x2, currentY);
+			Iterator<Line2D> iterator = edges.iterator();
+			Point2D previousIntersection = null;
+			while(iterator.hasNext()){
+				Line2D areaLine = iterator.next();
+				Point2D newIntersection = getIntersectionPoint(currentLine,areaLine);
+				if(newIntersection != null && newIntersection != previousIntersection){	//Prevent Duplicates
+					internalPoints.add(newIntersection);
+				}
+			}
+		}
+
+		for(double currentX = x1; currentX <= x2; currentX += separation){
+			Line2D currentLine = new Line2D.Double(currentX, y1, currentX, y2);
+			Iterator<Line2D> iterator = edges.iterator();
+			Point2D previousIntersection = null;
+			while(iterator.hasNext()){
+				Line2D areaLine = iterator.next();
+				Point2D newIntersection = getIntersectionPoint(currentLine,areaLine);
+				if(newIntersection != null && newIntersection != previousIntersection){	//Prevent Duplicates
+					internalPoints.add(newIntersection);
+				}
+			}
+		}
+		
+		return internalPoints;
+	}
+	
+	// Code taken from https://community.oracle.com/thread/1264395?start=0&tstart=0
+	//With modifications. Accessed 6/2/2016
+	public static Point2D getIntersectionPoint(Line2D line1, Line2D line2) {
+		if (! line1.intersectsLine(line2) ) return null;
+			double 	px = line1.getX1(),
+			        py = line1.getY1(),
+			        rx = line1.getX2()-px,
+			        ry = line1.getY2()-py;
+			double 	qx = line2.getX1(),
+			        qy = line2.getY1(),
+			        sx = line2.getX2()-qx,
+			        sy = line2.getY2()-qy;
+
+			double det = sx*ry - sy*rx;
+			if (det == 0) {
+				return null;
+			} else {
+				double z = (sx*(qy-py)+sy*(px-qx))/det;
+				if (z==0 ||  z==1) return null;  // intersection at end point!
+		        return new Point2D.Double((px+z*rx), (py+z*ry));
+			}
+	} // end intersection line-line
 }

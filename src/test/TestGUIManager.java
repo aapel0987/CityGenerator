@@ -65,12 +65,36 @@ public class TestGUIManager {
 		comp.addShape( s, c);
 	}
 	
+	public void addPoint(Point2D point, double radius, Color color){
+		addPoints(new Point2D[]{point},radius,color);
+	}
+	
 	public void addPoints(Point2D points[], double radius, Color color){
-		LinkedList<Area> pointAreas = new LinkedList<Area>();
+		LinkedList<Point2D> pointList = new LinkedList<Point2D>();
 		for(int index = 0; index < points.length; index++){
-			pointAreas.add(new Area(new Ellipse2D.Double(points[index].getX() -radius, points[index].getY() -radius, 2*radius, 2*radius)));
+			pointList.add(points[index]);
+		}
+		addPoints(pointList,radius,color);
+	}
+	
+	public void addPoints(List<Point2D> points, double radius, Color color){
+		LinkedList<Area> pointAreas = new LinkedList<Area>();
+		Iterator<Point2D> pointsIter = points.iterator(); 
+		while(pointsIter.hasNext()){
+			Point2D currPoint = pointsIter.next();
+			pointAreas.add(new Area(new Ellipse2D.Double(currPoint.getX() -radius, currPoint.getY() -radius, 2*radius, 2*radius)));
 		}
 		addShape(BasicShapeConstructor.combineAreasParallel(pointAreas),color);
+	}
+	
+	public void addLines(List<Line2D> areaSegments, Color color) {
+		Iterator<Line2D> lineIter = areaSegments.iterator();
+		LinkedList<Area> lineAreas = new LinkedList<Area>();
+		while(lineIter.hasNext()){
+			Line2D currLine = lineIter.next();
+			lineAreas.add(new Area((new BasicStroke(1)).createStrokedShape(currLine)));
+		}
+		addShape(BasicShapeConstructor.combineAreasParallel(lineAreas),color);
 	}
 	
     /**
@@ -165,7 +189,8 @@ public class TestGUIManager {
 			    
 			    areasSemaphore.release();
 		    } catch (Exception exception){
-
+		    	exception.printStackTrace();
+		    	System.err.println(exception.getMessage());
     			System.err.println("Paint Failed. Terminating");
     			System.exit(1);
 		    }
