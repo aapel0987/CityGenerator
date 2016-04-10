@@ -63,6 +63,55 @@ final public class BasicShapeConstructor {
 		return toReturn;
 	}
 	
+	public static Area basicConnectedCircles(Path2D path, double radius){
+		return basicConnectedCircles(path, new double[] {radius});
+	}
+	
+	public static Area basicConnectedCircles(Path2D path, double radii[]){
+		double seperation = radii[0];
+		for(double value : radii) if(seperation < value) seperation = value;
+		return basicConnectedCircles(path, radii, seperation);
+	}
+	
+	public static Area basicConnectedCircles(Path2D path, double radii[], double seperation){
+		LinkedList<Area> returnAreas = new LinkedList<Area>();
+		double[] coords = new double[6];
+		Point2D startPoint = null, previousPoint = null;
+		double startRadius;
+		
+		//This is how we will track the current radius. We will also use the lowe
+		int currentRadiusIndex = 0;
+		
+		for (PathIterator iter = path.getPathIterator(null, seperation); !iter.isDone(); iter.next()) {
+		    // The type will be SEG_LINETO, SEG_MOVETO, or SEG_CLOSE
+		    // Because the Area is composed of straight lines
+			int type = iter.currentSegment(coords);
+			Point2D nextPoint = new Point2D.Double(coords[0], coords[1]);
+			
+			//Select the radii to be used
+			double previousRadius = radii[currentRadiusIndex];
+			double nextRadius = radii[currentRadiusIndex];
+			if(currentRadiusIndex < radii.length -1) nextRadius = radii[++currentRadiusIndex];
+		    switch(type){
+		    	case PathIterator.SEG_MOVETO:
+		    		startPoint  = (Point2D) nextPoint.clone();
+		    		startRadius = previousRadius;
+		    		returnAreas.add(basicCircle(startPoint,startRadius));
+		    		break;
+		    	case PathIterator.SEG_CLOSE:
+		    		nextPoint = startPoint;
+		    		break;
+		    	default:	//This will be some form of line
+		    		returnAreas.add(basicCircle(nextPoint,nextRadius));
+		    		returnAreas.add(connectPoints(previousPoint,2*previousRadius,nextPoint,2*nextRadius));
+		    }
+		    
+		    previousPoint = nextPoint;
+		}
+
+		return combineAreasParallel(returnAreas);
+	}
+	
 	public static Area basicCircle(Point2D center, double radius){
 		return new Area(new Ellipse2D.Double(center.getX() - radius, center.getY() - radius, 2*radius, 2*radius));
 	}

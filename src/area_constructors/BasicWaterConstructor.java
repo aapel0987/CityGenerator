@@ -2,6 +2,7 @@ package area_constructors;
 
 import java.awt.BasicStroke;
 import java.awt.geom.Area;
+import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.util.LinkedList;
 import java.util.List;
@@ -39,6 +40,15 @@ public final class BasicWaterConstructor extends Constructor {
 		return river;
 	}
 
+	public static Group createSimpleRiver(Path2D path, double width){
+		Group river = new Group();
+		Layer waterLayer = new Layer(water,BasicShapeModifier.distortArea(BasicShapeConstructor.basicConnectedCircles(path, width/2),0.5,0.25));
+		Layer sandLayer = new Layer(sand,new Area((new BasicStroke(1)).createStrokedShape(waterLayer)));
+		river.add(waterLayer);
+		river.add(sandLayer);
+		return river;
+	}
+	
 	@Override
 	Constructor crossingConstructor(Constructor c) {
 		// TODO Auto-generated method stub
