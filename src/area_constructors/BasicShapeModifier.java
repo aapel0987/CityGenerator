@@ -14,7 +14,9 @@ import test.TestGUIManager;
 
 final public class BasicShapeModifier {
 
-	
+	public static Area distortArea(Area originalArea, double seperation, double maxMove, int iterations){
+		return new Area(distortPath2D(new Path2D.Double(originalArea), seperation, maxMove, iterations));
+	}
 	
 	public static Area distortArea(Area originalArea, double seperation, double maxMove){
 		return new Area(distortPath2D(new Path2D.Double(originalArea), seperation, maxMove));
@@ -62,13 +64,13 @@ final public class BasicShapeModifier {
 		return distortedPath;
 	}
 	
-	private static Point2D pointRandomReposition(Point2D point, double maxMove){
+	public static Point2D pointRandomReposition(Point2D point, double maxMove){
 		double angle = (((double)2)*Math.PI)*Math.random();
 		double distance = maxMove*Math.random();
 		return new Point2D.Double(point.getX() + distance*Math.cos(angle), point.getY() + distance*Math.sin(angle));
 	}
 	
-	public static Path2D iterativeDistortPath(Path2D path, double spacing, double movement, int iterations){
+	public static Path2D distortPath2D(Path2D path, double spacing, double movement, int iterations){
 		Path2D distortedPath = new Path2D.Double(path);
 		while(iterations-- > 0){
 			distortedPath = distortPath2D(distortedPath,spacing,movement);
@@ -76,5 +78,52 @@ final public class BasicShapeModifier {
 			movement /= 3;
 		}
 		return distortedPath;
+	}
+	
+	public static Path2D smoothPath2D(Path2D path, double smoothingCoefficient, double spacing){
+		Path2D smoothedPath = new Path2D.Double();
+		double adjacentPointsCoeff = smoothingCoefficient/2;
+		double currentPointCoeff = 1-smoothingCoefficient;
+		double[] coords = new double[6];
+		Point2D startPoint = null, currentPoint = null, previousPoint = null;
+		for (PathIterator iter = path.getPathIterator(null, spacing); !iter.isDone(); iter.next()) {
+		    // The type will be SEG_LINETO, SEG_MOVETO, or SEG_CLOSE
+		    // Because the Area is composed of straight lines
+			int type = iter.currentSegment(coords);
+			Point2D nextPoint = new Point2D.Double(coords[0], coords[1]);
+		    switch(type){
+		    	case PathIterator.SEG_MOVETO:
+		    		startPoint = (Point2D) nextPoint.clone();
+		    		smoothedPath.moveTo(startPoint.getX(), startPoint.getY());
+		    		currentPoint = null;
+		    		previousPoint = null;
+		    		break;
+		    	case PathIterator.SEG_CLOSE:
+		    		if(previousPoint != null){
+		    			//Smooth the point
+		    			double x_coord = adjacentPointsCoeff*(nextPoint.getX() + previousPoint.getX()) + currentPoint.getX()*currentPointCoeff;
+		    			double y_coord = adjacentPointsCoeff*(nextPoint.getY() + previousPoint.getY()) + currentPoint.getY()*currentPointCoeff;
+		    			smoothedPath.lineTo(x_coord, y_coord);
+		    		}
+		    		smoothedPath.closePath();
+		    		break;
+		    	default:	//This will be some form of line
+		    		if(previousPoint != null){
+		    			//Smooth the point
+		    			double x_coord = adjacentPointsCoeff*(nextPoint.getX() + previousPoint.getX()) + currentPoint.getX()*currentPointCoeff;
+		    			double y_coord = adjacentPointsCoeff*(nextPoint.getY() + previousPoint.getY()) + currentPoint.getY()*currentPointCoeff;
+		    			smoothedPath.lineTo(x_coord, y_coord);
+		    		}
+		    }
+		    
+		    currentPoint = nextPoint;
+		    previousPoint = currentPoint;
+		}
+
+		return smoothedPath;
+	}
+	
+	public static Area smoothArea(Area originalArea, double smoothingCoefficient, double spacing){
+		return new Area(smoothPath2D(new Path2D.Double(originalArea), smoothingCoefficient, spacing));
 	}
 }

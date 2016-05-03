@@ -12,6 +12,8 @@ import java.util.Iterator;
 import java.util.List;
 
 import area_constructors.BasicShapeConstructor;
+import pyromancers_model.Brush;
+import pyromancers_model.LocatorObject;
 import test.TestGUIManager;
 
 public class MaterialPoint extends Material {
@@ -23,7 +25,6 @@ public class MaterialPoint extends Material {
 		radius = rad;
 	}
 
-	@Override
 	public void renderFill(TestGUIManager gui, Area area) {
 		renderPoints(gui,getFillPoints(area,getSeperation(radius)));
 	}
@@ -53,6 +54,11 @@ public class MaterialPoint extends Material {
 		internalPoints.addAll(BasicShapeConstructor.getAreaEdgePoints(area,separation));
 		
 		return internalPoints;
+	}
+
+	public LocatorObject renderFill(Area area) {
+		List<Point2D> points = getFillPoints(area,radius);
+		return new Brush(points,this);
 	}
 	
 }

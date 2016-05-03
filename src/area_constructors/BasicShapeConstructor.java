@@ -286,6 +286,38 @@ final public class BasicShapeConstructor {
 		return paths;
 	}
 	
+	public static List<Point2D> pathToPoints(Path2D path, double separation){
+		ArrayList<Point2D> points = new ArrayList<Point2D>();
+		double[] coords = new double[6];
+		Point2D startPoint = null;
+		for (PathIterator iter = path.getPathIterator(null, separation); !iter.isDone(); iter.next()) {
+		    // The type will be SEG_LINETO, SEG_MOVETO, or SEG_CLOSE
+		    // Because the Area is composed of straight lines
+			int type = iter.currentSegment(coords);
+			Point2D currentPoint = new Point2D.Double(coords[0], coords[1]);
+		    switch(type){
+		    	case PathIterator.SEG_MOVETO:
+		    		startPoint = (Point2D) currentPoint.clone();
+		    	case PathIterator.SEG_CLOSE:
+		    		points.add(startPoint);
+		    		break;
+		    	default:	//This will be some form of line
+		    		points.add(currentPoint);
+		    }
+		}
+
+		return points;
+	}
+	
+	public static Path2D pointsToPath2D(List<Point2D> points){
+		Path2D path = new Path2D.Double();
+		path.moveTo(points.get(0).getX(), points.get(0).getX());
+		for(Point2D point : points){
+			path.lineTo(point.getX(), point.getY());
+		}
+		return path;
+	}
+	
 	public static ArrayList<Line2D> path2DToLines(Path2D path, double separation){
 		ArrayList<Line2D> pathSegments = new ArrayList<Line2D>();
 		double[] coords = new double[6];

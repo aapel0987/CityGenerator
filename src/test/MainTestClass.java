@@ -7,10 +7,26 @@ import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonIOException;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
+
+import area_constructors.BasicForestConstructor;
+import area_constructors.BasicMapConstructor;
 import area_constructors.BasicPathFinder;
 import area_constructors.BasicShapeConstructor;
 import area_constructors.BasicShapeModifier;
@@ -19,6 +35,10 @@ import map_structure.Group;
 import map_structure.Layer;
 import materials.MaterialPoint;
 import materials.MaterialsCollection;
+import pyromancers_model.Location;
+import pyromancers_model.Packs;
+import pyromancers_model.TextureTree;
+import pyromancers_model.UtilityBase;
 
 public class MainTestClass {
 
@@ -31,55 +51,35 @@ public class MainTestClass {
 		//TestFillBullseysWithGrass();
 		//TestGetIntersectionPoint();
 		//TestCreateSimpleRiverPoints();
-		TestCreateSimpleRiverPath();
+		//TestCreateSimpleRiverPath();
 		//TestLine2DToNodes();
 		//TestPathToNodes();
 		//TestNodesToPaths();
 		//TestDistortSquare();
 		//TestGetBestPath();
+		//TestGsonBuilder();
+		//TestPyromancersModel();
+		//TestPackConstructor();
+		//TestComplexRiverPath();
+		TestMapConstructor();
+		
+		
+		
+		System.out.println("Tests Complete.");
 	}
 
-/*	private static void TestGetBestPath(){
-		Group map = new Group();
-		Layer mapBase = new Layer(MaterialsCollection.Grass,0,0,150,100);
-		List<Point2D> toConnect = new LinkedList<Point2D>();
-		toConnect.add(new Point2D.Double(1, 1));
-		toConnect.add(new Point2D.Double(149, 99));
-		Path2D path = BasicPathFinder.getBestPath(toConnect, mapBase, 20);
-		map.add(mapBase);
-		LinkedList<Point2D> points = new LinkedList<Point2D>(BasicShapeModifier.pathToNodes(path, 15));
-		Group waterLayer = BasicWaterConstructor.createSimpleRiver(points,10); 
-		map.add(waterLayer);
-		map.crop(mapBase);
-		TestGUIManager gui = new TestGUIManager("TestGetAreaPaths");
-		map.render(gui);
-		gui.addPoints(points, 1, Color.black);
+	private static void TestMapConstructor(){
+		//Create the map
+		BasicMapConstructor mapConstructor = new BasicMapConstructor(150,100);
+		Group map = mapConstructor.constructMap();
 		
-		//map.render(gui);
-	}*/
-	
-	private static void TestCreateSimpleRiverPoints(){
-		Group map = new Group();
-		Layer mapBase = new Layer(MaterialsCollection.Grass,0,0,150,100);
-		map.add(mapBase);
-		map.add(BasicWaterConstructor.createSimpleRiver(new double[]{75,0,25,75,100,25,75,100},10));
-		map.crop(mapBase);
-		
-		TestGUIManager gui = new TestGUIManager("TestCreateSimpleRiverPoints");
+		//Render in GUI
+		TestGUIManager gui = new TestGUIManager("TestMapConstructor");
 		map.render(gui);
-	}
-	
-	
-	private static void TestCreateSimpleRiverPath(){
-		Group map = new Group();
-		Layer mapBase = new Layer(MaterialsCollection.Grass,0,0,150,100);
-		map.add(mapBase);
-		Path2D riverpath = BasicShapeModifier.iterativeDistortPath(new Path2D.Double(new Line2D.Double(0, 0, 150, 100)), 50, 50,10);
-		map.add(BasicWaterConstructor.createSimpleRiver(riverpath,10));
-		map.crop(mapBase);
 		
-		TestGUIManager gui = new TestGUIManager("TestCreateSimpleRiverPath");
-		map.render(gui);
+		//Print to File
+		String filename = "C:\\Users\\Alex\\Google Drive\\CodeProjects\\CityGenerator\\map_examples\\TestMapConstructor.rdm";
+		Location.writeToFile(map, filename);;
 	}
 	
 	private static void TestDistortSquare(){
@@ -141,5 +141,53 @@ public class MainTestClass {
 			}
 		}
 	}
+	
+    private static void TestGsonBuilder() {
+        Gson gson = new GsonBuilder().create();
+        gson.toJson("Hello", System.out);
+        gson.toJson(123, System.out);
+    }
+    
+    private static void TestPyromancersModel(){
+		JsonObject jsonobj = null;
+		final String filename = "C:\\Users\\Alex\\Google Drive\\CodeProjects\\CityGenerator\\map_examples\\nature.rdm";
+		try {
+			jsonobj = (JsonObject)(new JsonParser().parse(new BufferedReader(new FileReader(filename))));
+		} catch (JsonIOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (JsonSyntaxException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	HashMap<Integer,UtilityBase> objectMap = new HashMap<Integer,UtilityBase>();
+    	Location location = new Location(jsonobj,objectMap);
+    	jsonobj = (JsonObject)(new JsonParser().parse(location.toJasonHead().toString()));
+    	objectMap.clear();
+    	System.out.println("Second Parsing");
+    	Location location2 = new Location(jsonobj,objectMap);
+    	location.enumerate();
+    	PrintWriter writer = null;
+		try {
+			writer = new PrintWriter(filename + ".reprint", "UTF-8");
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	writer.println(location.toJasonHead());
+    	writer.close();
+    }
+    
+    private static void TestPackConstructor(){
+    	System.out.println(Packs.getMapItem(MaterialsCollection.Grass).toString());
+    	System.out.println(Packs.getMapItem(MaterialsCollection.Sand).toString());
+    	System.out.println(Packs.getMapItem(MaterialsCollection.Water).toString());
+    }
 	
 }

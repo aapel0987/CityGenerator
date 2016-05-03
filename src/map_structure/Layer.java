@@ -6,6 +6,7 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 
 import materials.Material;
+import pyromancers_model.MapListed;
 import test.TestGUIManager;
 
 public class Layer extends Area implements Generateable {
@@ -40,5 +41,13 @@ public class Layer extends Area implements Generateable {
 
 	public void crop(Shape s) {
 		this.intersect(new Area(s));
+	}
+
+	public MapListed render() {
+		return new pyromancers_model.Layer("layer",material.renderFill(this));
+	}
+	
+	public Area getArea(){
+		return this;
 	}
 }

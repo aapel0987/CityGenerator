@@ -12,6 +12,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 import area_constructors.BasicShapeConstructor;
+import pyromancers_model.LocatorObject;
+import pyromancers_model.Polygon;
 import test.TestGUIManager;
 
 public class MaterialPoly extends Material {
@@ -34,5 +36,9 @@ public class MaterialPoly extends Material {
 			areas.add(new Area(stroke.createStrokedShape(iter.next())));
 		}
 		return areas;
+	}
+
+	public LocatorObject renderFill(Area area) {
+		return new Polygon(this,area);
 	}
 }
