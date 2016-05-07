@@ -34,16 +34,21 @@ public class Obstical extends LocatorObject {
 		}
 	}
 	
-	public Obstical(MapItem _actual, int _alpha, double _x, double _y, boolean _shadow, boolean _blur){
-		super(_actual);
-		alpha = _alpha;
-		x = _x;
-		y = _y;
-		shadow = _shadow;
-		blur = _blur;
+	public Obstical(MapItem _actual, Point2D point){
+		this(_actual,point,30,true,false);
 	}
 	
-	public void position(Point2D point, double _angle){
+	public Obstical(MapItem _actual, Point2D point, int _alpha, boolean _shadow, boolean _blur){
+		this(_actual,point,_alpha,_shadow,_blur,((double) 360) * random.nextDouble());
+	}
+	
+	public Obstical(MapItem _actual, Point2D point, int _alpha, boolean _shadow, boolean _blur, double _angle){
+		super(_actual);
+		alpha = _alpha;
+		x = point.getX();
+		y = point.getY();
+		shadow = _shadow;
+		blur = _blur;
 		begin = new Point(point);
 		angle = _angle;
 	}

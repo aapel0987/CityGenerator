@@ -2,18 +2,13 @@ package materials;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.Graphics2D;
 import java.awt.geom.Area;
-import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
-import java.awt.geom.Point2D;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
 import area_constructors.BasicShapeConstructor;
-import pyromancers_model.LocatorObject;
-import pyromancers_model.Polygon;
 import test.TestGUIManager;
 
 public class MaterialPoly extends Material {
@@ -36,9 +31,5 @@ public class MaterialPoly extends Material {
 			areas.add(new Area(stroke.createStrokedShape(iter.next())));
 		}
 		return areas;
-	}
-
-	public LocatorObject renderFill(Area area) {
-		return new Polygon(this,area);
 	}
 }

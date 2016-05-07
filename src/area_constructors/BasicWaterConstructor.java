@@ -10,7 +10,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import map_structure.Group;
-import map_structure.Layer;
+import map_structure.AreaLayer;
 import materials.Material;
 import materials.MaterialsCollection;
 
@@ -40,8 +40,11 @@ public final class BasicWaterConstructor extends Constructor {
 	}
 	
 	private static Group createSimpleRiver(Group river, Path2D path, double width){
-		Layer waterLayer = new Layer(water,BasicShapeModifier.smoothArea(BasicShapeModifier.distortArea(BasicShapeConstructor.basicConnectedCircles(path, width/2),width/5,width/10),0.7,0.5));
-		Layer sandLayer = new Layer(sand,new Area((new BasicStroke(1)).createStrokedShape(waterLayer)));
+		Area waterArea = BasicShapeModifier.smoothArea(BasicShapeModifier.distortArea(BasicShapeConstructor.basicConnectedCircles(path, width/2),width/5,width/10, 5),0.7,0.5);
+		AreaLayer waterLayer = new AreaLayer(water,waterArea);
+		final float sandWidth = 1; 
+		Area sandArea = BasicShapeModifier.smoothArea(BasicShapeModifier.distortArea(new Area((new BasicStroke(sandWidth)).createStrokedShape(waterLayer)),sandWidth/5,sandWidth/10, 5),0.7,0.5);
+		AreaLayer sandLayer = new AreaLayer(sand,sandArea);
 		river.add("water",waterLayer);
 		river.add("sand",sandLayer);
 		return river;
@@ -50,19 +53,21 @@ public final class BasicWaterConstructor extends Constructor {
 	private static Path2D createRandomRiverNetwork(Rectangle bounds){
 		//Create 4 points on the edges
 		LinkedList<Point2D> points = new LinkedList<Point2D>(); 
-		points.add( new Point2D.Double(random.nextDouble()*bounds.getWidth() + bounds.getMinX(),bounds.getMaxY()));
-		points.add( new Point2D.Double(random.nextDouble()*bounds.getWidth() + bounds.getMinX(),bounds.getMinY()));
-		points.add( new Point2D.Double(bounds.getMinX(), random.nextDouble()*bounds.getHeight() + bounds.getMinY()));
-		points.add( new Point2D.Double(bounds.getMaxX(), random.nextDouble()*bounds.getHeight() + bounds.getMinY()));
+		points.add( new Point2D.Double(getRandomNormal(bounds.getMinX(),bounds.getMaxX()),bounds.getMaxY()));	//Top
+		points.add( new Point2D.Double(getRandomNormal(bounds.getMinX(),bounds.getMaxX()),bounds.getMinY()));	//Bottom
+		points.add( new Point2D.Double(bounds.getMinX(), getRandomNormal(bounds.getMinY(),bounds.getMaxY())));	//Left
+		points.add( new Point2D.Double(bounds.getMaxX(), getRandomNormal(bounds.getMinY(),bounds.getMaxY())));	//Right
 		
 		//Now Create center point
-		Point2D center = getRandomPoint(bounds);
+		Point2D center = new Point2D.Double(
+				getRandomNormal(bounds.getMinX(),bounds.getMaxX(),(bounds.getMinX()+bounds.getMaxX())/2),
+				getRandomNormal(bounds.getMinY(),bounds.getMaxY(),(bounds.getMinY()+bounds.getMaxY())/2));
 		
 		//Now connect random points to the center
 		Path2D path = new Path2D.Double();
-		for(int iterationCount = random.nextInt(points.size() - 2)+2; iterationCount >0; iterationCount--){
+		for(int iterationCount = random.nextInt(points.size() - 1)+2; iterationCount >0; iterationCount--){
 			//Choose a point
-			int selection = random.nextInt(points.size() -1);
+			int selection = random.nextInt(points.size());
 			Point2D choice = points.remove(selection);
 			path.append(new Line2D.Double(choice.getX(), choice.getY(), center.getX(), center.getY()), false);
 		}

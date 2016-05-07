@@ -43,8 +43,12 @@ public class Brush extends LocatorObject {
 		}
 	}
 	
-	public Brush(List<Point2D> _points, MaterialPoint material){ 
-		super(Packs.getMapItem(material));
+	public Brush(MaterialPoint material,List<Point2D> _points){ 
+		this(Packs.getMapItem(material),_points);
+	}
+	
+	public Brush(MapItem _actual,List<Point2D> _points){ 
+		super(_actual);
 		alpha = 30;
 		x = _points.get(0).getX();
 		y = _points.get(0).getY();
@@ -53,8 +57,7 @@ public class Brush extends LocatorObject {
 		position = new Point(_points.get(0));
 		points = new LinkedList<Obstical>();
 		for(Point2D point : _points){
-			Obstical obst = new Obstical(actual,alpha,point.getX(),point.getY(),shadow,blur);
-			obst.position(point, ((double) 360) * Math.random());
+			Obstical obst = new Obstical(actual,point,alpha,shadow,blur);
 			points.add(obst);
 		}
 	}

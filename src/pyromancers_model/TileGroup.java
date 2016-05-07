@@ -1,5 +1,6 @@
 package pyromancers_model;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
@@ -95,4 +96,8 @@ public class TileGroup extends UtilityBase {
 		return null;
 	}
 
+	public ArrayList<MapItem> getMapItems(String folderArg) {
+		if(!folderArg.equals(folder)) return null;
+		return new ArrayList<MapItem>(tiles);
+	}
 }

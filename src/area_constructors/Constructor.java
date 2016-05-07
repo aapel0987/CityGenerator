@@ -37,4 +37,21 @@ public abstract class Constructor {
 		for(Generateable mapItem : mapItems) toReturn.add(mapItem.getArea());
 		return toReturn;
 	}
+	
+	protected static double getRandomNormal(double maximum){
+		return getRandomNormal(0,maximum);
+	}
+	
+	protected static double getRandomNormal(double minimum, double maximum){
+		return getRandomNormal(minimum,maximum,(minimum+maximum)/2);
+	}
+	
+	protected static double getRandomNormal(double minimum, double maximum, double mean){
+		double standardDeviation = Math.max((mean-minimum)/3, (maximum-mean)/3);
+		return getRandomNormal(minimum,maximum,mean,standardDeviation);
+	}
+	
+	protected static double getRandomNormal(double minimum, double maximum, double mean, double standardDeviation){
+		return Math.min(Math.max(random.nextGaussian()*standardDeviation + mean,minimum),maximum);
+	}
 }

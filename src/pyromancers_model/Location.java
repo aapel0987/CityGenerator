@@ -25,8 +25,8 @@ public class Location extends UtilityBase {
 		}
 	}
 	
-	public Location(Group group){
-		layers = (Bunch) group.render();
+	public Location(Bunch map){
+		layers = map;
 	}
 	
 	protected boolean reset(){
@@ -75,9 +75,5 @@ public class Location extends UtilityBase {
 		}
     	writer.println(this.toJasonHead());
     	writer.close();
-	}
-	
-	public static void writeToFile(Group map, String filename){
-		(new Location(map)).writeToFile(filename);
 	}
 }

@@ -6,7 +6,7 @@ import java.awt.geom.Point2D;
 
 import map_structure.Generateable;
 import map_structure.Group;
-import map_structure.Layer;
+import map_structure.AreaLayer;
 import materials.Material;
 import materials.MaterialPoint;
 import materials.MaterialsCollection;
@@ -33,7 +33,7 @@ public class BasicForestConstructor extends Constructor {
 	
 	private Group ConstructComplexForest(Area routeableArea){
 		Group forest = new Group("ConstructComplexForest",this);
-		Layer trees = new Layer(tree);
+		AreaLayer trees = new AreaLayer(tree);
 		int iterations = count;
 		while(iterations-- > 0){
 			trees.add(ConstructComplexForestArea(routeableArea));

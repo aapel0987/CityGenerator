@@ -1,6 +1,7 @@
 package pyromancers_model;
 
 import java.util.Map;
+import java.util.Random;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -8,6 +9,7 @@ import com.google.gson.JsonObject;
 public abstract class LocatorObject extends UtilityBase {
 
 	protected MapItem actual;
+	protected final static Random random = new Random();
 	
 	public LocatorObject(JsonElement jsonElement,  Map<Integer, UtilityBase> objectMap) {
 		super(jsonElement,objectMap);

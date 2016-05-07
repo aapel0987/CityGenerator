@@ -1,17 +1,13 @@
 package pyromancers_model;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-
-import map_structure.Generateable;
 
 public class Bunch extends MapListed {
 
@@ -19,6 +15,17 @@ public class Bunch extends MapListed {
 	public static final String __type = "com.bongo.layers.logic::Bunch";
 	private LinkedList<MapListed> source;
 
+	public Bunch(String name){
+		super();
+		id = name;
+		source = new LinkedList<MapListed>();
+	}
+	
+	public Bunch(String name, Collection<MapListed> mapListedCollection){
+		this(name);
+		source.addAll(mapListedCollection);
+	}
+	
 	public Bunch(JsonElement jsonElement, Map<Integer,UtilityBase> objectMap) {
 		super(jsonElement,objectMap);
 		source = new LinkedList<MapListed>();
@@ -30,15 +37,8 @@ public class Bunch extends MapListed {
 		}
 	}
 	
-	public Bunch(String name, Collection<Generateable> members){
-		super();
-		id = name;
-		source = new LinkedList<MapListed>();
-		List<Generateable> localMembers = new LinkedList<Generateable>(members);
-		Collections.reverse(localMembers); 
-		for(Generateable member : localMembers){
-			source.add(member.render());
-		}
+	protected void addSource(MapListed item){
+		source.add(item);
 	}
 	
 	protected boolean reset(){

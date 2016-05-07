@@ -5,7 +5,7 @@ import java.awt.geom.Rectangle2D;
 
 import map_structure.Generateable;
 import map_structure.Group;
-import map_structure.Layer;
+import map_structure.AreaLayer;
 import materials.MaterialsCollection;
 
 public class BasicMapConstructor extends Constructor {
@@ -33,7 +33,7 @@ public class BasicMapConstructor extends Constructor {
 		//Here Maps are built in phases
 		Group map = new Group("createSimpleMap",this);
 		//Phase 0: Create Base Map
-		Layer mapBase = new Layer(MaterialsCollection.Grass,routeableArea);
+		AreaLayer mapBase = new AreaLayer(MaterialsCollection.Grass,routeableArea);
 		map.add("mapBase", mapBase);
 		//Phase 1: Add Large Rivers
 		map.add("large_rivers", (new BasicWaterConstructor(15)).construct(mapBase,map));

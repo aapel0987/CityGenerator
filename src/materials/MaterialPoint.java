@@ -4,16 +4,11 @@ import java.awt.Color;
 import java.awt.geom.Area;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Point2D;
-import java.awt.geom.Line2D;
-import java.awt.geom.PathIterator;
-import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
 import area_constructors.BasicShapeConstructor;
-import pyromancers_model.Brush;
-import pyromancers_model.LocatorObject;
 import test.TestGUIManager;
 
 public class MaterialPoint extends Material {
@@ -26,7 +21,8 @@ public class MaterialPoint extends Material {
 	}
 
 	public void renderFill(TestGUIManager gui, Area area) {
-		renderPoints(gui,getFillPoints(area,getSeperation(radius)));
+		gui.addShape(area,color);
+		renderPoints(gui,BasicShapeConstructor.getAreaEdgePoints(area,getSeperation(radius)));
 	}
 	
 	private void renderPoints(TestGUIManager gui, List<Point2D> points){
@@ -56,9 +52,7 @@ public class MaterialPoint extends Material {
 		return internalPoints;
 	}
 
-	public LocatorObject renderFill(Area area) {
-		List<Point2D> points = getFillPoints(area,radius);
-		return new Brush(points,this);
+	public ArrayList<Point2D> getFillPoints(Area area){
+		return new ArrayList(getFillPoints(area,radius));
 	}
-	
 }

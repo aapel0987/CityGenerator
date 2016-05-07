@@ -1,5 +1,6 @@
 package pyromancers_model;
 
+import java.util.ArrayList;
 import java.util.Map;
 
 import com.google.gson.JsonElement;
@@ -53,6 +54,14 @@ public class TextureMode extends UtilityBase {
 		for(TileGroup group : groups.values()){
 			MapItem item = group.getMapItem(folder,id);
 			if(item != null) return item;
+		}
+		return null;
+	}
+	
+	public ArrayList<MapItem> getMapItems(String folder) {
+		for(TileGroup group : groups.values()){
+			ArrayList<MapItem> list = group.getMapItems(folder);
+			if(list != null) return list;
 		}
 		return null;
 	}

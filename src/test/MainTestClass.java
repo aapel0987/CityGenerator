@@ -32,11 +32,12 @@ import area_constructors.BasicShapeConstructor;
 import area_constructors.BasicShapeModifier;
 import area_constructors.BasicWaterConstructor;
 import map_structure.Group;
-import map_structure.Layer;
+import map_structure.AreaLayer;
 import materials.MaterialPoint;
 import materials.MaterialsCollection;
 import pyromancers_model.Location;
 import pyromancers_model.Packs;
+import pyromancers_model.PyromancersMapFactory;
 import pyromancers_model.TextureTree;
 import pyromancers_model.UtilityBase;
 
@@ -69,17 +70,18 @@ public class MainTestClass {
 	}
 
 	private static void TestMapConstructor(){
-		//Create the map
+		
+		System.out.println("Building Map");
 		BasicMapConstructor mapConstructor = new BasicMapConstructor(150,100);
 		Group map = mapConstructor.constructMap();
 		
-		//Render in GUI
+		System.out.println("Rendering Preview");
 		TestGUIManager gui = new TestGUIManager("TestMapConstructor");
 		map.render(gui);
 		
-		//Print to File
+		System.out.println("Writing to File");
 		String filename = "C:\\Users\\Alex\\Google Drive\\CodeProjects\\CityGenerator\\map_examples\\TestMapConstructor.rdm";
-		Location.writeToFile(map, filename);;
+		PyromancersMapFactory.writeToFile(map, filename);;
 	}
 	
 	private static void TestDistortSquare(){

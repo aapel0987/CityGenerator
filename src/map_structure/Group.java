@@ -4,13 +4,9 @@ import java.awt.Shape;
 import java.awt.geom.Area;
 import java.util.Collection;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 
 import area_constructors.Constructor;
-import pyromancers_model.Bunch;
-import pyromancers_model.Location;
-import pyromancers_model.MapListed;
 import test.TestGUIManager;
 
 public class Group implements Generateable {
@@ -38,6 +34,10 @@ public class Group implements Generateable {
 		this.add(mem);
 	}
 
+	public String getName(){
+		return name;
+	}
+	
 	public boolean add(Generateable mem){
 		return add("Group_add_no_name_argument_" + nameless_additions++,mem);
 	}
@@ -68,14 +68,6 @@ public class Group implements Generateable {
 	
 	public void crop(Shape s) {
 		for(Generateable member : members.values()) member.crop(s);
-	}
-	
-	public Location renderMap(){
-		return new Location(this);
-	}
-
-	public MapListed render() {
-		return new Bunch(name,members.values());
 	}
 	
 	public Collection<Generateable> getMembers(){

@@ -36,8 +36,12 @@ public class Polygon extends LocatorObject{
 		}
 	}
 	
-	public Polygon(MaterialPoly material, Area area){
-		super(Packs.getMapItem(material));
+	public Polygon(Area area, MaterialPoly material){
+		this(area,Packs.getMapItem(material));
+	}
+	
+	public Polygon(Area area, MapItem mapItem){
+		super(mapItem);
 		List<List<Point2D>> listOfPointSets = new LinkedList<List<Point2D>>(); 
 		for(Path2D path : BasicShapeConstructor.getAreaPaths(area)){
 			listOfPointSets.add(BasicShapeConstructor.pathToPoints(path,0.1));
