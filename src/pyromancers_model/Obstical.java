@@ -73,28 +73,26 @@ public class Obstical extends LocatorObject {
 		return starting_value;
 	}
 	
-	public StringBuilder toJasonFull(){
-		StringBuilder builder = new StringBuilder();
-		builder.append("\"x\":" + x + ",");
-		append__type(builder,__type);
-		builder.append(",");
-		appendOnOff(builder,"blur",blur);
-		builder.append(",");
-		builder.append("\"y\":" + y + ",");
-		append__id(builder);
-		builder.append(",\"alpha\":" + alpha + ",");
-		builder.append(actualToJason());
-		builder.append(",");
-		builder.append("\"begin\":{");
-		builder.append(begin.toJason());
-		builder.append("},");
+	public void toJasonFull(JsonWriter writer){
+		writer.jsonWrite("\"x\":" + x + ",");
+		append__type(writer,__type);
+		writer.jsonWrite(",");
+		appendOnOff(writer,"blur",blur);
+		writer.jsonWrite(",");
+		writer.jsonWrite("\"y\":" + y + ",");
+		append__id(writer);
+		writer.jsonWrite(",\"alpha\":" + alpha + ",");
+		actualToJason(writer);
+		writer.jsonWrite(",");
+		writer.jsonWrite("\"begin\":{");
+		begin.toJason(writer);
+		writer.jsonWrite("},");
 		if(end != null){
-			builder.append("\"end\":{");
-			builder.append(end.toJason());
-			builder.append("},");
+			writer.jsonWrite("\"end\":{");
+			end.toJason(writer);
+			writer.jsonWrite("},");
 		}
-		appendOnOff(builder,"shadow",shadow);
-		builder.append(",\"angle\":" + angle);
-		return builder;
+		appendOnOff(writer,"shadow",shadow);
+		writer.jsonWrite(",\"angle\":" + angle);
 	}
 }

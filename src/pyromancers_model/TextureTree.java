@@ -77,21 +77,19 @@ public class TextureTree extends UtilityBase {
 		return starting_value;
 	}
 	
-	public StringBuilder toJasonFull(){
-		StringBuilder builder = new StringBuilder();
-		builder.append("\"folder\":\"" + folder + "\",");
-		append__type(builder,__type);
-		builder.append(",");
-		append__id(builder);
-		builder.append(",\"title\":\"" + title + "\",");
-		appendOnOff(builder,"enable_printing",enable_printing);
-		builder.append(",");
-		builder.append("\"modes\":{");
-		builder.append(modes.toJason());
-		builder.append("},\"pa\":" + pa);
-		builder.append(",\"shadow\":" + shadow);
-		builder.append(",\"is_local\":" + is_local);
-		builder.append(",\"pb\":" + pb);
-		return builder;
+	public void toJasonFull(JsonWriter writer){
+		writer.jsonWrite("\"folder\":\"" + folder + "\",");
+		append__type(writer,__type);
+		writer.jsonWrite(",");
+		append__id(writer);
+		writer.jsonWrite(",\"title\":\"" + title + "\",");
+		appendOnOff(writer,"enable_printing",enable_printing);
+		writer.jsonWrite(",");
+		writer.jsonWrite("\"modes\":{");
+		modes.toJason(writer);
+		writer.jsonWrite("},\"pa\":" + pa);
+		writer.jsonWrite(",\"shadow\":" + shadow);
+		writer.jsonWrite(",\"is_local\":" + is_local);
+		writer.jsonWrite(",\"pb\":" + pb);
 	}
 }

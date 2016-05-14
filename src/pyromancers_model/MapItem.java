@@ -49,19 +49,17 @@ public class MapItem extends UtilityBase {
 		return starting_value;
 	}
 
-	public StringBuilder toJasonFull(){
-		StringBuilder builder = new StringBuilder();
-		builder.append("\"group_folder\":\"" + group_folder + "\",");
-		builder.append("\"pack\":{");
-		builder.append(pack.toJason());
-		builder.append("},");
-		append__type(builder,__type);
-		builder.append(",");
-		append__id(builder);
-		builder.append(",\"id\":" + id);
-		builder.append(",\"tilex\":" + tilex);
-		builder.append(",\"tiley\":" + tiley);
-		return builder;
+	public void toJasonFull(JsonWriter writer){
+		writer.jsonWrite("\"group_folder\":\"" + group_folder + "\",");
+		writer.jsonWrite("\"pack\":{");
+		pack.toJason(writer);
+		writer.jsonWrite("},");
+		append__type(writer,__type);
+		writer.jsonWrite(",");
+		append__id(writer);
+		writer.jsonWrite(",\"id\":" + id);
+		writer.jsonWrite(",\"tilex\":" + tilex);
+		writer.jsonWrite(",\"tiley\":" + tiley);
 	}
 
 	public TextureTree getPack() {

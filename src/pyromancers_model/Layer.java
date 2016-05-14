@@ -47,16 +47,14 @@ public class Layer extends MapListed {
 		return starting_value;
 	}
 
-	public StringBuilder toJasonFull(){
-		StringBuilder builder = new StringBuilder();
-		builder.append("\"id\":\"" + id + "\",");
-		builder.append("\"data\":{");
-		builder.append(data.toJason());
-		builder.append("},");
-		append__type(builder,__type);
-		builder.append(",");
-		append__id(builder);
-		return builder;
+	public void toJasonFull(JsonWriter writer){
+		writer.jsonWrite("\"id\":\"" + id + "\",");
+		writer.jsonWrite("\"data\":{");
+		data.toJason(writer);
+		writer.jsonWrite("},");
+		append__type(writer,__type);
+		writer.jsonWrite(",");
+		append__id(writer);
 	}
 
 	public LinkedList<TextureTree> getPacks() {

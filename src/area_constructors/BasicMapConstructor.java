@@ -43,7 +43,8 @@ public class BasicMapConstructor extends Constructor {
 		//Phase 5: Add Urban Items
 		//Phase 6: Add Forests
 		map.add("forests",(new BasicForestConstructor(mapBase, 0.25, 0.05, 3)).construct(mapBase,map));
-		//Phase 7: Add trees
+		//Phase 7: Add trees & ground cover
+		map.add("ground_cover",(new BasicFieldConstructor(0.01)).construct(mapBase, map));
 		//Phase 8: Crop the whole thing
 		map.crop(mapBase);
 		return map;

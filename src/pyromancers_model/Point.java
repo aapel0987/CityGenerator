@@ -31,13 +31,11 @@ public class Point extends UtilityBase {
 		return __type;
 	}
 
-	public StringBuilder toJasonFull(){
-		StringBuilder builder = new StringBuilder();
-		builder.append("\"x\":" + x + ",");
-		append__type(builder,__type);
-		builder.append(",");
-		builder.append("\"y\":" + y + ",");
-		append__id(builder);
-		return builder;
+	public void toJasonFull(JsonWriter writer){
+		writer.jsonWrite("\"x\":" + x + ",");
+		append__type(writer,__type);
+		writer.jsonWrite(",");
+		writer.jsonWrite("\"y\":" + y + ",");
+		append__id(writer);
 	}
 }

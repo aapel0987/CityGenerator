@@ -150,42 +150,6 @@ public class MainTestClass {
         gson.toJson(123, System.out);
     }
     
-    private static void TestPyromancersModel(){
-		JsonObject jsonobj = null;
-		final String filename = "C:\\Users\\Alex\\Google Drive\\CodeProjects\\CityGenerator\\map_examples\\nature.rdm";
-		try {
-			jsonobj = (JsonObject)(new JsonParser().parse(new BufferedReader(new FileReader(filename))));
-		} catch (JsonIOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (JsonSyntaxException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-    	HashMap<Integer,UtilityBase> objectMap = new HashMap<Integer,UtilityBase>();
-    	Location location = new Location(jsonobj,objectMap);
-    	jsonobj = (JsonObject)(new JsonParser().parse(location.toJasonHead().toString()));
-    	objectMap.clear();
-    	System.out.println("Second Parsing");
-    	Location location2 = new Location(jsonobj,objectMap);
-    	location.enumerate();
-    	PrintWriter writer = null;
-		try {
-			writer = new PrintWriter(filename + ".reprint", "UTF-8");
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-    	writer.println(location.toJasonHead());
-    	writer.close();
-    }
-    
     private static void TestPackConstructor(){
     	System.out.println(Packs.getMapItem(MaterialsCollection.Grass).toString());
     	System.out.println(Packs.getMapItem(MaterialsCollection.Sand).toString());

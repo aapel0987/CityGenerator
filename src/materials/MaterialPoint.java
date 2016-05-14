@@ -5,6 +5,7 @@ import java.awt.geom.Area;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -22,19 +23,23 @@ public class MaterialPoint extends Material {
 
 	public void renderFill(TestGUIManager gui, Area area) {
 		gui.addShape(area,color);
-		renderPoints(gui,BasicShapeConstructor.getAreaEdgePoints(area,getSeperation(radius)));
+		renderFill(gui,BasicShapeConstructor.getAreaEdgePoints(area,getSeperation(radius)));
 	}
 	
-	private void renderPoints(TestGUIManager gui, List<Point2D> points){
-		Area area = BasicShapeConstructor.combineAreasParallel(getAreas(points));
-		gui.addShape(area,color);
+	public void renderFill(TestGUIManager gui, Collection<Point2D> points) {
+		renderPoints(gui,points);
 	}
 	
-	private ArrayList<Area> getAreas(List<Point2D> points){
+	private void renderPoints(TestGUIManager gui, Collection<Point2D> points){
+		if(points.size() > 0){
+			Area area = BasicShapeConstructor.combineAreasParallel(getAreas(points));
+			gui.addShape(area,color);
+		}
+	}
+	
+	private ArrayList<Area> getAreas(Collection<Point2D> points){
 		ArrayList<Area> areas = new ArrayList<Area>();
-		Iterator<Point2D> iterator = points.iterator();
-		while(iterator.hasNext()){
-			Point2D currPoint = iterator.next();
+		for(Point2D currPoint : points){
 			areas.add(new Area(new Ellipse2D.Double(currPoint.getX()-radius,currPoint.getY()-radius,2*radius,2*radius)));
 		}
 		return areas;

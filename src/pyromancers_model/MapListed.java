@@ -7,7 +7,7 @@ import com.google.gson.JsonElement;
 
 public abstract class MapListed extends UtilityBase {
 
-	public abstract StringBuilder toJasonFull();
+	public abstract void toJasonFull(JsonWriter writer);
 
 	public abstract LinkedList<TextureTree> getPacks();
 	

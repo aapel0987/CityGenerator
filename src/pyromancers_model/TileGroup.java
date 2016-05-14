@@ -64,30 +64,28 @@ public class TileGroup extends UtilityBase {
 		return starting_value;
 	}
 	
-	public StringBuilder toJasonFull(){
-		StringBuilder builder = new StringBuilder();
-		builder.append("\"folder\":\"" + folder + "\",");
-		builder.append("\"x\":" + x + ",");
-		append__type(builder,__type);
-		builder.append(",\"y\":" + y + ",");
-		append__id(builder);
-		builder.append(",");
-		appendOnOff(builder,"blur",blur);
-		builder.append(",");
-		appendOnOff(builder,"shadow",shadow);
-		builder.append(",\"tiles\":[");
+	public void toJasonFull(JsonWriter writer){
+		writer.jsonWrite("\"folder\":\"" + folder + "\",");
+		writer.jsonWrite("\"x\":" + x + ",");
+		append__type(writer,__type);
+		writer.jsonWrite(",\"y\":" + y + ",");
+		append__id(writer);
+		writer.jsonWrite(",");
+		appendOnOff(writer,"blur",blur);
+		writer.jsonWrite(",");
+		appendOnOff(writer,"shadow",shadow);
+		writer.jsonWrite(",\"tiles\":[");
 		for(Iterator<MapItem> iter = tiles.iterator(); iter.hasNext(); ){
-			builder.append("{");
-			builder.append(iter.next().toJason());
-			builder.append("}");
-			if(iter.hasNext()) builder.append(",");
+			writer.jsonWrite("{");
+			iter.next().toJason(writer);
+			writer.jsonWrite("}");
+			if(iter.hasNext()) writer.jsonWrite(",");
 		}
-		builder.append("]");
-		builder.append(",\"title\":\"" + title + "\",");
-		builder.append("\"tilex\":" + tilex + ",");
-		appendOnOff(builder,"rotate",rotate);
-		builder.append(",\"tiley\":" + tiley);
-		return builder;
+		writer.jsonWrite("]");
+		writer.jsonWrite(",\"title\":\"" + title + "\",");
+		writer.jsonWrite("\"tilex\":" + tilex + ",");
+		appendOnOff(writer,"rotate",rotate);
+		writer.jsonWrite(",\"tiley\":" + tiley);
 	}
 
 	public MapItem getMapItem(String folderArg, int id) {

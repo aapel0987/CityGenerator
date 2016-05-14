@@ -82,33 +82,31 @@ public class Brush extends LocatorObject {
 		return starting_value;
 	}
 	
-	public StringBuilder toJasonFull(){
+	public void toJasonFull(JsonWriter writer){
 		StringBuilder builder = new StringBuilder();
-		builder.append("\"x\":" + x + ",");
-		append__type(builder,__type);
-		builder.append(",");
-		appendOnOff(builder,"blur",blur);
-		builder.append(",\"y\":" + y + ",");
-		append__id(builder);
-		builder.append(",\"alpha\":" + alpha + ",");
+		writer.jsonWrite("\"x\":" + x + ",");
+		append__type(writer,__type);
+		writer.jsonWrite(",");
+		appendOnOff(writer,"blur",blur);
+		writer.jsonWrite(",\"y\":" + y + ",");
+		append__id(writer);
+		writer.jsonWrite(",\"alpha\":" + alpha + ",");
 		
-		builder.append(actualToJason());
-		builder.append(",");
+		actualToJason(writer);
+		writer.jsonWrite(",");
 
-		builder.append("\"position\":{");
-		builder.append(position.toJason());
-		builder.append("},");
+		writer.jsonWrite("\"position\":{");
+		position.toJason(writer);
+		writer.jsonWrite("},");
 		
-		builder.append("\"points\":[");
+		writer.jsonWrite("\"points\":[");
 		for(Iterator<Obstical> iter = points.iterator(); iter.hasNext(); ){
-			builder.append("{");
-			builder.append(iter.next().toJason());
-			builder.append("}");
-			if(iter.hasNext()) builder.append(",");
+			writer.jsonWrite("{");
+			iter.next().toJason(writer);
+			writer.jsonWrite("}");
+			if(iter.hasNext()) writer.jsonWrite(",");
 		}
-		builder.append("],");
-		appendOnOff(builder,"shadow",shadow);
-		
-		return builder;
+		writer.jsonWrite("],");
+		appendOnOff(writer,"shadow",shadow);
 	}
 }

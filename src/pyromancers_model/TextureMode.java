@@ -39,15 +39,13 @@ public class TextureMode extends UtilityBase {
 	}
 	
 
-	public StringBuilder toJasonFull(){
-		StringBuilder builder = new StringBuilder();
-		append__type(builder,__type);
-		builder.append(",");
-		builder.append("\"groups\":{");
-		builder.append(groups.toJason());
-		builder.append("},");
-		append__id(builder);
-		return builder;
+	public void toJasonFull(JsonWriter writer){
+		append__type(writer,__type);
+		writer.jsonWrite(",");
+		writer.jsonWrite("\"groups\":{");
+		groups.toJason(writer);
+		writer.jsonWrite("},");
+		append__id(writer);
 	}
 
 	public MapItem getMapItem(String folder, int id) {

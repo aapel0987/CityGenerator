@@ -42,20 +42,18 @@ public class Plot extends LocatorObject {
 		return starting_value;
 	}
 	
-	public StringBuilder toJasonFull(){
-		StringBuilder builder = new StringBuilder();
-		builder.append("\"end\":{");
-		builder.append(end.toJason());
-		builder.append("},");
-		builder.append(actualToJason());
-		builder.append(",");
-		append__type(builder,__type);
-		builder.append(",");
-		builder.append("\"begin\":{");
-		builder.append(begin.toJason());
-		builder.append("},");
-		append__id(builder);
-		return builder;
+	public void toJasonFull(JsonWriter writer){
+		writer.jsonWrite("\"end\":{");
+		end.toJason(writer);
+		writer.jsonWrite("},");
+		actualToJason(writer);
+		writer.jsonWrite(",");
+		append__type(writer,__type);
+		writer.jsonWrite(",");
+		writer.jsonWrite("\"begin\":{");
+		begin.toJason(writer);
+		writer.jsonWrite("},");
+		append__id(writer);
 	}
 
 }

@@ -77,26 +77,24 @@ public class Polygon extends LocatorObject{
 	}
 	
 
-	public StringBuilder toJasonFull(){
-		StringBuilder builder = new StringBuilder();
-		builder.append(actualToJason());
-		builder.append(",");
-		append__type(builder,__type);
-		builder.append(",");
-		append__id(builder);
-		builder.append(",");
-		appendOnOff(builder,"ended",ended);
-		builder.append(",\"begin\":{");
-		builder.append(begin.toJason());
-		builder.append("},");
-		builder.append("\"points\":[");
+	public void toJasonFull(JsonWriter writer){
+		actualToJason(writer);
+		writer.jsonWrite(",");
+		append__type(writer,__type);
+		writer.jsonWrite(",");
+		append__id(writer);
+		writer.jsonWrite(",");
+		appendOnOff(writer,"ended",ended);
+		writer.jsonWrite(",\"begin\":{");
+		begin.toJason(writer);
+		writer.jsonWrite("},");
+		writer.jsonWrite("\"points\":[");
 		for(Iterator<Point> iter = points.iterator(); iter.hasNext(); ){
-			builder.append("{");
-			builder.append(iter.next().toJason());
-			builder.append("}");
-			if(iter.hasNext()) builder.append(",");
+			writer.jsonWrite("{");
+			iter.next().toJason(writer);
+			writer.jsonWrite("}");
+			if(iter.hasNext()) writer.jsonWrite(",");
 		}
-		builder.append("]");
-		return builder;
+		writer.jsonWrite("]");
 	}
 }

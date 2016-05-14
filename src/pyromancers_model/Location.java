@@ -1,6 +1,7 @@
 package pyromancers_model;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.LinkedList;
@@ -47,15 +48,13 @@ public class Location extends UtilityBase {
 		return starting_value;
 	}
 	
-	public StringBuilder toJasonFull(){
-		StringBuilder builder = new StringBuilder();
-		append__type(builder,__type);
-		builder.append(",");
-		builder.append("\"layers\":{");
-		builder.append(layers.toJason());
-		builder.append("},");
-		append__id(builder);
-		return builder;
+	public void toJasonFull(JsonWriter writer){
+		append__type(writer,__type);
+		writer.jsonWrite(",");
+		writer.jsonWrite("\"layers\":{");
+		layers.toJason(writer);
+		writer.jsonWrite("},");
+		append__id(writer);
 	}
 	
 	public LinkedList<TextureTree> getPacks(){
@@ -63,17 +62,19 @@ public class Location extends UtilityBase {
 	}
 	
 	public void writeToFile(String filename){ 
-		PrintWriter writer = null;
+		JsonFileWriter writer = null;
 		try {
-			writer = new PrintWriter(filename, "UTF-8");
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (UnsupportedEncodingException e) {
+			writer = new JsonFileWriter(filename);
+		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-    	writer.println(this.toJasonHead());
-    	writer.close();
+    	this.toJasonHead(writer);
+    	try {
+			writer.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }

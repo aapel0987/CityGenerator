@@ -46,18 +46,16 @@ public class EnumerableMap<V extends UtilityBase> extends UtilityBase implements
 		return starting_value;
 	}
 	
-	public StringBuilder toJasonFull(){
-		StringBuilder builder = new StringBuilder();
-		append__type(builder,__type);
-		builder.append(",");
-		append__id(builder);
+	public void toJasonFull(JsonWriter writer){
+		append__type(writer,__type);
+		writer.jsonWrite(",");
+		append__id(writer);
 		for(String key : localMap.keySet()){
-			builder.append(",");
-			builder.append("\"" + key + "\":{");
-			builder.append(localMap.get(key).toJason());
-			builder.append("}");
+			writer.jsonWrite(",");
+			writer.jsonWrite("\"" + key + "\":{");
+			localMap.get(key).toJason(writer);
+			writer.jsonWrite("}");
 		}
-		return builder;
 	}
 
 	public void clear() {

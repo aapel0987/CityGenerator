@@ -61,22 +61,20 @@ public class Bunch extends MapListed {
 		return starting_value;
 	}
 
-	public StringBuilder toJasonFull(){
-		StringBuilder builder = new StringBuilder();
-		builder.append("\"id\":\"" + id + "\",");
-		append__type(builder,__type);
-		builder.append(",");
-		append__id(builder);
-		builder.append(",");
-		builder.append("\"source\":[");
+	public void toJasonFull(JsonWriter writer){
+		writer.jsonWrite("\"id\":\"" + id + "\",");
+		append__type(writer,__type);
+		writer.jsonWrite(",");
+		append__id(writer);
+		writer.jsonWrite(",");
+		writer.jsonWrite("\"source\":[");
 		for(Iterator<MapListed> iter = source.iterator(); iter.hasNext(); ){
-			builder.append("{");
-			builder.append(iter.next().toJason());
-			builder.append("}");
-			if(iter.hasNext()) builder.append(",");
+			writer.jsonWrite("{");
+			iter.next().toJason(writer);
+			writer.jsonWrite("}");
+			if(iter.hasNext()) writer.jsonWrite(",");
 		}
-		builder.append("]");
-		return builder;
+		writer.jsonWrite("]");
 	}
 
 	public LinkedList<TextureTree> getPacks() {

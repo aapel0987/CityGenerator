@@ -6,6 +6,8 @@ import java.util.Random;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
+import pyromancers_model.UtilityBase.JsonWriter;
+
 public abstract class LocatorObject extends UtilityBase {
 
 	protected MapItem actual;
@@ -45,11 +47,9 @@ public abstract class LocatorObject extends UtilityBase {
 		return actual.getPack();
 	}
 
-	public StringBuilder actualToJason(){
-		StringBuilder builder = new StringBuilder();
-		builder.append("\"actual\":{");
-		builder.append(actual.toJason());
-		builder.append("}");
-		return builder;
+	public void actualToJason(JsonWriter writer){
+		writer.jsonWrite("\"actual\":{");
+		actual.toJason(writer);
+		writer.jsonWrite("}");
 	}
 }

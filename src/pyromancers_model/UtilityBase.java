@@ -1,5 +1,8 @@
 package pyromancers_model;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Map;
 
 import com.google.gson.JsonElement;
@@ -10,6 +13,26 @@ abstract public class UtilityBase implements Cloneable {
 	private int __id;
 	private boolean wasPrinted;
 	private boolean enumerating;
+	
+	protected interface JsonWriter{
+		public abstract void jsonWrite(String str);
+	}
+	
+	protected class JsonFileWriter extends BufferedWriter implements JsonWriter{
+
+		public JsonFileWriter(String arg0) throws IOException {
+			super(new FileWriter(arg0));
+		}
+
+		public void jsonWrite(String str) {
+			try {
+				this.write(str);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
 	
 	public UtilityBase(JsonElement jsonElement, Map<Integer,UtilityBase> objectMap){
 		this();
@@ -45,11 +68,11 @@ abstract public class UtilityBase implements Cloneable {
 		return starting_value;
 	}
 	
-	public StringBuilder append__type(StringBuilder builder, String __type){
-		return builder.append("\"__type\":\"" + __type + "\"");
+	public void append__type(JsonWriter writer, String __type){
+		writer.jsonWrite("\"__type\":\"" + __type + "\"");
 	}
 	
-	abstract public StringBuilder toJasonFull();
+	abstract public void toJasonFull(JsonWriter writer);
 		
 	abstract public String get__type();
 			
@@ -60,43 +83,40 @@ abstract public class UtilityBase implements Cloneable {
 		return toReturn;
 	}
 	
-	public final StringBuilder toJason(){
+	public final void toJason(JsonWriter writer){
 		if(!wasPrinted){
 			wasPrinted = true;
-			return toJasonFull();
+			toJasonFull(writer);
+		} else {
+			toJasonSmall(writer);
 		}
-		return toJasonSmall();
 	}
 	
-	public final StringBuilder toJasonHead(){
-		StringBuilder builder = new StringBuilder();
+	public final void toJasonHead(JsonWriter writer){
 		this.reset();
 		this.enumerate();
-		builder.append("{");
-		builder.append(toJason());
-		builder.append("}");
-		return builder;
+		writer.jsonWrite("{");
+		toJason(writer);
+		writer.jsonWrite("}");
 	}
 	
-	private StringBuilder toJasonSmall(){
-		StringBuilder builder = new StringBuilder();
-		append__id(builder);
-		builder.append(",");
-		append__type(builder,get__type());
-		return builder;
+	private final void toJasonSmall(JsonWriter writer){
+		append__id(writer);
+		writer.jsonWrite(",");
+		append__type(writer,get__type());
 	}
 	
-	public StringBuilder append__id(StringBuilder builder){
-		return append__id(builder, __id);
+	public void append__id(JsonWriter writer){
+		append__id(writer, __id);
 	}
 
-	public StringBuilder append__id(StringBuilder builder, int value){
-		return builder.append("\"__id\":" + value);
+	public void append__id(JsonWriter writer, int value){
+		writer.jsonWrite("\"__id\":" + value);
 	}
 	
-	public StringBuilder appendOnOff(StringBuilder builder, String name, boolean value){
-		if(value) return builder.append("\"" + name + "\":\"on\"");
-		return builder.append("\"" + name + "\":\"off\"");
+	public void appendOnOff(JsonWriter writer, String name, boolean value){
+		if(value) writer.jsonWrite("\"" + name + "\":\"on\"");
+		else writer.jsonWrite("\"" + name + "\":\"off\"");
 	}
 		
 	public static boolean parseOnOff(JsonElement jsonElement, String fieldName){

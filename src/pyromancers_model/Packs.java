@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -28,6 +27,7 @@ public class Packs {
 		materialAssociations.put(MaterialsCollection.Sand,naturePack.getMapItem("terrain/grownd/", 5));
 		materialAssociations.put(MaterialsCollection.Water,naturePack.getMapItem("terrain/grownd/", 6));
 		materialAssociations.put(MaterialsCollection.Tree,buildCustomCollectionTrees(naturePack));
+		materialAssociations.put(MaterialsCollection.Brush,buildCustomCollectionScrubland(naturePack));
 		materialAssociations.put(MaterialsCollection.Grass,naturePack.getMapItem("floor/grass-open/", 1));
 		
 		return materialAssociations;
@@ -37,11 +37,24 @@ public class Packs {
 		ArrayList<MapItem> customCollection = new ArrayList<MapItem>();
 		customCollection.addAll(pack.getMapItem("plants/forest/",1));
 		customCollection.addAll(pack.getMapItem("plants/forest/",29));
-		customCollection.addAll(pack.getMapItem("plants/forest/",32));
 		customCollection.addAll(pack.getMapItem("plants/forest/",33));
-		ArrayList<MapItem> mostCommon = pack.getMapItem("plants/forest/",41);
-		int count = 10;
-		while(count-->0) customCollection.addAll(mostCommon);
+		customCollection.addAll(pack.getMapItem("plants/forest/",41));
+		return customCollection;
+	}
+	
+	private static ArrayList<MapItem> buildCustomCollectionScrubland(TextureTree pack){
+		ArrayList<MapItem> customCollection = new ArrayList<MapItem>();
+		customCollection.addAll(pack.getMapItem("plants/forest/",10));
+		customCollection.addAll(pack.getMapItem("plants/forest/",11));
+		customCollection.addAll(pack.getMapItem("plants/forest/",12));
+		customCollection.addAll(pack.getMapItem("plants/forest/",15));
+		customCollection.addAll(pack.getMapItem("plants/forest/",16));
+		customCollection.addAll(pack.getMapItem("plants/forest/",21));
+		customCollection.addAll(pack.getMapItem("plants/forest/",22));
+		customCollection.addAll(pack.getMapItem("plants/forest/",23));
+		customCollection.addAll(pack.getMapItem("plants/forest/",24));
+		customCollection.addAll(pack.getMapItem("plants/forest/",28));
+		customCollection.addAll(pack.getMapItem("plants/forest/",32));
 		return customCollection;
 	}
 	
