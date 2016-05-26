@@ -1,6 +1,7 @@
 package area_constructors;
 
 import java.awt.Color;
+import java.awt.Shape;
 import java.awt.geom.Area;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
@@ -9,6 +10,7 @@ import java.awt.geom.PathIterator;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -19,6 +21,7 @@ import test.TestGUIManager;
 final public class BasicShapeConstructor {
 
 	private final static int threadcount = 5;
+	private final static double pointOnLineError = 0.1;
 	
 	public static Area basicConnectedCircles(List<Point2D> points, double radius) {
 		double[] radii = new double[points.size()];
@@ -318,6 +321,10 @@ final public class BasicShapeConstructor {
 		return path;
 	}
 	
+	public static ArrayList<Line2D> shapeToLines(Shape shape, double separation){
+		return path2DToLines(new Path2D.Double(shape),separation);
+	}
+	
 	public static ArrayList<Line2D> path2DToLines(Path2D path, double separation){
 		ArrayList<Line2D> pathSegments = new ArrayList<Line2D>();
 		double[] coords = new double[6];
@@ -342,6 +349,21 @@ final public class BasicShapeConstructor {
 		}
 
 		return pathSegments;
+	}
+		
+	public static boolean intersectAnyLine(Line2D line, Collection<Line2D> lines){
+		for(Line2D checkLine : lines)
+			if(		line.intersectsLine(checkLine) &&
+					checkLine.ptLineDist(line.getP1()) > pointOnLineError &&
+					checkLine.ptLineDist(line.getP2()) > pointOnLineError ) return true;
+		return false;
+	}
+	
+	public static boolean intersectAnyLine(Point2D point, Collection<Line2D> lines){
+		for(Line2D checkLine : lines)
+			if(checkLine.ptLineDist(point) <= pointOnLineError )
+				return true;
+		return false;
 	}
 	
 	public static ArrayList<Line2D> getAreaLines(Area area, double separation, boolean connectParts){
@@ -459,7 +481,6 @@ final public class BasicShapeConstructor {
 				return null;
 			} else {
 				double z = (sx*(qy-py)+sy*(px-qx))/det;
-				if (z==0 ||  z==1) return null;  // intersection at end point!
 		        return new Point2D.Double((px+z*rx), (py+z*ry));
 			}
 	} // end intersection line-line

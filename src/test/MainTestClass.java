@@ -12,7 +12,9 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -27,10 +29,10 @@ import com.google.gson.JsonSyntaxException;
 
 import area_constructors.BasicForestConstructor;
 import area_constructors.BasicMapConstructor;
-import area_constructors.BasicPathFinder;
 import area_constructors.BasicShapeConstructor;
 import area_constructors.BasicShapeModifier;
 import area_constructors.BasicWaterConstructor;
+import area_constructors.DefaultPathConstructor;
 import map_structure.Group;
 import map_structure.AreaLayer;
 import materials.MaterialPoint;
@@ -44,8 +46,8 @@ import pyromancers_model.UtilityBase;
 public class MainTestClass {
 
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
 		System.out.println("Hello again Java, my dear old friend!");
+		final long startTime = System.currentTimeMillis();
 		//TestFillBlueBullseye();
 		//TestDrawPattern();
 		//TestFillBullseysWithSand();
@@ -62,11 +64,13 @@ public class MainTestClass {
 		//TestPyromancersModel();
 		//TestPackConstructor();
 		//TestComplexRiverPath();
-		TestMapConstructor();
+		TestDefaultPathConstructor();
+		//TestMapConstructor();
 		
-		
-		
+
+		final long endTime = System.currentTimeMillis();
 		System.out.println("Tests Complete.");
+		System.out.println("Total execution time: " + (endTime - startTime) );
 	}
 
 	private static void TestMapConstructor(){
@@ -81,7 +85,41 @@ public class MainTestClass {
 		
 		System.out.println("Writing to File");
 		String filename = "C:\\Users\\Alex\\Google Drive\\CodeProjects\\CityGenerator\\map_examples\\TestMapConstructor.rdm";
-		PyromancersMapFactory.writeToFile(map, filename);;
+		//PyromancersMapFactory.writeToFile(map, filename);;
+	}
+	
+	private static void TestDefaultPathConstructor(){
+		TestGUIManager gui = new TestGUIManager("TestDefaultPathConstructor");
+		DefaultPathConstructor constructor = new DefaultPathConstructor();
+		double size = 3500/5;
+		Area base = new Area(new Rectangle2D.Double(0, 0, size, size));
+		gui.addShape(base, Color.GREEN);
+		
+		Random random = new Random();
+		
+		
+		Area blockers = new Area();
+		for(int count = random.nextInt(10) +1; count > 0; count--){
+			Point2D center = new Point2D.Double(random.nextDouble()*size, random.nextDouble()*size);
+			double radius = random.nextDouble()*size/2;
+			blockers.add(BasicShapeConstructor.basicCircle(center, radius));
+		}
+		blockers.intersect(base);
+		gui.addShape(blockers, Color.RED);
+
+		Area routeableArea = new Area(base);
+		routeableArea.subtract(blockers);
+		
+		int pointsToKeep = random.nextInt(6 -2 +1) +2;
+		ArrayList<Point2D> points = new ArrayList<Point2D>(BasicShapeConstructor.getAreaEdgePoints(routeableArea,0.01));
+		
+		while(points.size() > pointsToKeep) points.remove(random.nextInt(points.size()));
+		gui.addPoints(points, size * (0.25/15) , Color.DARK_GRAY);
+
+		Path2D path = constructor.getPath(routeableArea, new Group("null", constructor), new HashSet<Point2D>(points), 1.0, 0.1, 10);
+		
+		BasicStroke stroke = new BasicStroke((float) (size * (0.05/15)) );
+		gui.addShape(stroke.createStrokedShape(path), Color.BLACK);
 	}
 	
 	private static void TestDistortSquare(){
