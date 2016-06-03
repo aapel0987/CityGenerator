@@ -91,7 +91,7 @@ public class MainTestClass {
 	private static void TestDefaultPathConstructor(){
 		TestGUIManager gui = new TestGUIManager("TestDefaultPathConstructor");
 		DefaultPathConstructor constructor = new DefaultPathConstructor();
-		double size = 3500/5;
+		double size = 150;//3500/5;
 		Area base = new Area(new Rectangle2D.Double(0, 0, size, size));
 		gui.addShape(base, Color.GREEN);
 		
@@ -116,7 +116,7 @@ public class MainTestClass {
 		while(points.size() > pointsToKeep) points.remove(random.nextInt(points.size()));
 		gui.addPoints(points, size * (0.25/15) , Color.DARK_GRAY);
 
-		Path2D path = constructor.getPath(routeableArea, new Group("null", constructor), new HashSet<Point2D>(points), 1.0, 0.1, 10);
+		Path2D path = constructor.getPath(routeableArea, new Group("null", constructor), new HashSet<Point2D>(points), 1.0, 0.1, 8);
 		
 		BasicStroke stroke = new BasicStroke((float) (size * (0.05/15)) );
 		gui.addShape(stroke.createStrokedShape(path), Color.BLACK);

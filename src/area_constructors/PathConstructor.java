@@ -4,16 +4,21 @@ import java.awt.geom.Area;
 import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Semaphore;
 
 import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
@@ -29,10 +34,11 @@ import org.jgrapht.graph.GraphPathImpl;
 import org.jgrapht.traverse.ClosestFirstIterator;
 
 import map_structure.Group;
+import utils.PeekableIterator;
 
 public abstract class PathConstructor extends Constructor {
 
-	private final static int threadcount = 5;
+	private final static int THREADCOUNT = 5;
 	
 	protected static class GraphContainer{
 		DirectedWeightedPseudograph<Point2D, ConstructorContainer> graph;
@@ -93,8 +99,13 @@ public abstract class PathConstructor extends Constructor {
 			return verticies;
 		}
 		
-		protected ArrayList<ArrayList<Point2D>> getVerticiesAs2DArrayList(){
-			LinkedList<Point2D> verticies = new LinkedList<Point2D>(graph.vertexSet());
+		protected LinkedList<LinkedList<Point2D>> getVerticiesAs2DLinkedList(){
+			return getVerticiesAs2DLinkedList(null);
+		}
+		
+		protected LinkedList<LinkedList<Point2D>> getVerticiesAs2DLinkedList(Area area){
+			LinkedList<Point2D> verticies = new LinkedList<Point2D>();
+			if(area != null) verticies.addAll(this.getVerticies(area));
 			Collections.sort(verticies, pointComparitor);
 			LinkedList<LinkedList<Point2D>> linkedList = new LinkedList<LinkedList<Point2D>>();
 			Point2D previousPoint = verticies.remove();
@@ -110,12 +121,8 @@ public abstract class PathConstructor extends Constructor {
 					currentRow.add(currentPoint);
 				}
 			}
-			ArrayList<ArrayList<Point2D>> toReturn = new ArrayList<ArrayList<Point2D>>();
-			for(LinkedList<Point2D> currentList : linkedList){
-				toReturn.add(new ArrayList<Point2D>(currentList));
-			}
 			
-			return toReturn;
+			return linkedList;
 		}
 	}
 	
@@ -471,7 +478,209 @@ public abstract class PathConstructor extends Constructor {
 		return graph;
 	}
 	
-	protected abstract void annotateGraph(Area routeableArea, Group map, GraphContainer graph);
+	protected void annotateGraph(Area routeableArea, Group map, GraphContainer graph){
+		annotateGraph(routeableArea, map, graph, graph.getSeparation() * 1.5);
+	}
+	
+	protected void annotateGraph(Area routeableArea, Group map, GraphContainer graph, double connectRadius){
+		LinkedList<Line2D> blockingLines = new LinkedList<Line2D>(BasicShapeConstructor.getAreaLines(routeableArea, BasicShapeConstructor.pointOnLineError, false));
+		LinkedList<LinkedList<Point2D>> allPoints = graph.getVerticiesAs2DLinkedList(routeableArea);
+		GraphAnnotator annotator = new GraphAnnotator(blockingLines,allPoints,graph, this, connectRadius);
+		Thread threads[] = new Thread[THREADCOUNT];
+		for(int threadindex = 0; threadindex < THREADCOUNT; threadindex++){
+			threads[threadindex] = new Thread(annotator,"annotateGraph_Thread_" + threadindex);
+			threads[threadindex].start();
+		}
+		
+		for(int threadindex = 0; threadindex < THREADCOUNT; threadindex++){
+			try {
+				threads[threadindex].join();
+			} catch (InterruptedException e) {
+				System.err.println("No one should be interruppting this thread. annotateGraph()");
+				System.err.flush();
+				System.exit(1);
+			}
+		}
+	}
+	
+	private class GraphAnnotator implements Runnable {
+
+		//As a rule the input arguments that are stored for local use cannot be modified, with the exception
+		//of the input graph being annotated.
+		LinkedList<Line2D> blockingLines;
+		LinkedList<LinkedList<Point2D>> allPoints;
+		PathConstructor parent;
+		double connectionDistance;
+		
+		//These fields are protected by semaphore
+		Semaphore graphSem;
+		GraphContainer graph;
+		
+		Semaphore edgeListSem;
+		LinkedList<LinkedList<PseudoEdge>> edgeLists;
+
+		Semaphore remainingPointsSem;
+		LinkedList<LinkedList<Point2D>> remainingPoints;
+		
+		private class PseudoEdge {
+			private Point2D source;
+			private Point2D target;
+			private double weight;
+			
+			public PseudoEdge(Point2D _source, Point2D _target, double _weight){
+				source = _source;
+				target = _target;
+				weight = _weight;
+			}
+			
+			public void addToGraphContainer(){
+				graph.addEdge(source, target, weight, parent);
+			}
+		}
+		
+		public GraphAnnotator(LinkedList<Line2D> _blockingLines, LinkedList<LinkedList<Point2D>> _allPoints,
+				GraphContainer _graph, PathConstructor _parent, double _connectionDistance) {
+			blockingLines = _blockingLines;
+			allPoints = _allPoints;
+			graph = _graph;
+			parent = _parent;
+			connectionDistance = _connectionDistance;
+			
+			graphSem = new Semaphore(1);
+			edgeListSem = new Semaphore(1);
+			remainingPointsSem = new Semaphore(1);
+			edgeLists = new LinkedList<LinkedList<PseudoEdge>>();
+			remainingPoints = new LinkedList<LinkedList<Point2D>>(allPoints);
+		}
+
+		private LinkedList<Point2D> getNextRow(){
+			LinkedList<Point2D> nextRow = null;
+			try {
+				remainingPointsSem.acquire();
+				while(!remainingPoints.isEmpty() && nextRow == null){
+					nextRow = remainingPoints.removeFirst();
+					if(nextRow.isEmpty()) nextRow = null;
+				}
+				remainingPointsSem.release();
+			} catch (InterruptedException e) {
+				System.err.println("No one should be interruppting this thread. GraphAnnotator.getNextRow()");
+				System.err.flush();
+				System.exit(1);
+			}
+			return nextRow;
+		}
+		
+		@Override
+		public void run() {
+			annotateGraph();
+		}
+		
+		public void annotateGraph(){
+			//1. Determine which set of points on which we are operating
+			LinkedList<Point2D> currentRow = getNextRow();
+			while(currentRow != null){		//Keep going until we cannot get another row
+				
+				//2. Determine All Points that could possibly interact with these points and get iterators for them
+				LinkedHashMap<PeekableIterator<Point2D>,LinkedList<Point2D>> relavantPoints = new LinkedHashMap<PeekableIterator<Point2D>,LinkedList<Point2D>>();
+				for(LinkedList<Point2D> currentList : allPoints ){
+					//Distance on Y axis is sufficient for including in additional comparisons, otherwise the entire row can be discarded
+					if(!currentList.isEmpty()) if(Math.abs(currentList.peekFirst().getY() - currentRow.peekFirst().getY()) < connectionDistance){
+						relavantPoints.put(new PeekableIterator<Point2D>(currentList), new LinkedList<Point2D>());
+					}
+				}
+				
+				//3. Determine a subset of all lines that could possibly interact with these point pairs
+				//Create a rectangle representing range of reach. This could include some invalid lines, but is cheap and easy
+				double xCoord = currentRow.peekFirst().getX() - connectionDistance;
+				double yCoord = currentRow.peekFirst().getY() + connectionDistance;
+				double width = (currentRow.peekLast().getX() - currentRow.peekFirst().getX()) + 2*connectionDistance;
+				double height = 2*connectionDistance;
+				Rectangle2D bounds = new Rectangle2D.Double(xCoord, yCoord, width, height);
+				LinkedList<Line2D> blockingLinesSubset = new LinkedList<Line2D>();
+				for(Line2D testLine : blockingLines) if(bounds.intersectsLine(testLine)) blockingLinesSubset.add(testLine);
+				
+				//List for adding edges
+				LinkedList<PseudoEdge> pseudoEdges = new LinkedList<PseudoEdge>();
+				
+				//Main Processing
+				for(Point2D currentPoint : currentRow){
+					Iterator<Entry<PeekableIterator<Point2D>, LinkedList<Point2D>>> iterListPairIterator = relavantPoints.entrySet().iterator();
+					while(iterListPairIterator.hasNext()){
+						Entry<PeekableIterator<Point2D>, LinkedList<Point2D>> iterListPair = iterListPairIterator.next();
+						PeekableIterator<Point2D> currentIter = iterListPair.getKey();
+						LinkedList<Point2D> currentList = iterListPair.getValue();
+						//4. Create a set of sublists for each row, using the iterators to add to them, and removing out of reach points
+						//Add in range points
+						while(currentIter.hasNext() && //Add points while they are available, are in range, or are to the left of the current point
+								(currentIter.peek().distance(currentPoint) < connectionDistance || currentIter.peek().getX() < currentPoint.getX())){
+							currentList.add(currentIter.next());
+						}
+						//Remove out of range points
+						while(currentList.size() > 0 && //Remove points while there are points to remove, and they are our of range and to the left of the current point
+								(currentList.getLast().distance(currentPoint) > connectionDistance && currentList.getLast().getX() < currentPoint.getX())){
+							currentList.removeLast();
+						}
+						//5. For each point in the sublist, if a path to the current node is not blocked, add an edge to the current PseudoEdge List
+						//At this point all edges in the current list are in range of the current point. Add connections if they are not blocked
+						for(Point2D inRangePoint : currentList){
+							Line2D line = new Line2D.Double(currentPoint, inRangePoint);
+							if(!BasicShapeConstructor.intersectAnyLine(line,blockingLinesSubset)){
+								pseudoEdges.add(new PseudoEdge(currentPoint, inRangePoint, parent.getWeight(currentPoint, inRangePoint)));
+							}
+						}
+					}
+				}
+				
+				//6. Add the local PseudoEdge List to the master PseudoEdge List
+				addPseudoEdges(pseudoEdges);
+				//7. If we can get a handle on the graph, that means that no one is adding edges to it, so start doing so.
+				if(graphSem.tryAcquire()){
+					updateGraph();
+					graphSem.release();
+				}
+				//8. Determine if there are more rows to be processed
+				currentRow = getNextRow();
+			}	//end while(currentRow != null)
+			return;
+		}
+		
+		private void updateGraph() {
+			LinkedList<PseudoEdge> currentPseudoEdges = getNextPseudoEdges();
+			while(currentPseudoEdges != null){
+				while(currentPseudoEdges.size() > 0){
+					currentPseudoEdges.removeFirst().addToGraphContainer();
+				}
+				currentPseudoEdges = getNextPseudoEdges();
+			}
+		}
+
+		private LinkedList<PseudoEdge> getNextPseudoEdges() {
+			try {
+				edgeListSem.acquire();
+			} catch (InterruptedException e) {
+				System.err.println("No one should be interruppting this thread. GraphAnnotator.addPseudoEdges()");
+				System.err.flush();
+				System.exit(1);
+			}
+			LinkedList<PseudoEdge> pseudoEdges = null;
+			if(edgeLists.size() > 0) pseudoEdges = edgeLists.removeFirst();
+			edgeListSem.release();
+			return pseudoEdges;
+		}
+
+		private void addPseudoEdges(LinkedList<PseudoEdge> pseudoEdges) {
+			try {
+				edgeListSem.acquire();
+			} catch (InterruptedException e) {
+				System.err.println("No one should be interruppting this thread. GraphAnnotator.addPseudoEdges()");
+				System.err.flush();
+				System.exit(1);
+			}
+			edgeLists.add(pseudoEdges);
+			edgeListSem.release();
+		}
+		
+	}
 	
 	@Override
 	public abstract Group blockingArea(Constructor c, Group constructed);
@@ -479,4 +688,7 @@ public abstract class PathConstructor extends Constructor {
 	@Override
 	public abstract Group construct(Area routeableArea, Group currentMap);
 
+	protected double getWeight(Point2D p0, Point2D p1){
+		throw new UnsupportedOperationException("This method must be overridden by a superclass for use.");
+	}
 }

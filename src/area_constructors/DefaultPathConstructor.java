@@ -16,7 +16,7 @@ public class DefaultPathConstructor extends PathConstructor {
 	//TestGUIManager gui = new TestGUIManager("DefaultPathConstructor");
 	//BasicStroke stroke = new BasicStroke((float) 0.05);
 	
-	@Override
+	/*@Override
 	protected void annotateGraph(Area routeableArea, Group map,
 			GraphContainer graph) {
 		//gui.addShape(routeableArea, Color.GREEN);
@@ -44,8 +44,14 @@ public class DefaultPathConstructor extends PathConstructor {
 			}
 			//gui.addPoint(source, 0.25, Color.CYAN);
 		}
-	}
+	}*/
 
+	protected double getWeight(Point2D p0, Point2D p1){
+		double weight = p0.distance(p1);
+		weight *= (1 + (random.nextDouble()/2));
+		return weight;
+	}
+	
 	@Override
 	public Group blockingArea(Constructor c, Group constructed) {
 		// TODO Auto-generated method stub

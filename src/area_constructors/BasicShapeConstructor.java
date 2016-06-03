@@ -21,7 +21,7 @@ import test.TestGUIManager;
 final public class BasicShapeConstructor {
 
 	private final static int threadcount = 5;
-	private final static double pointOnLineError = 0.1;
+	public final static double pointOnLineError = 0.1;
 	
 	public static Area basicConnectedCircles(List<Point2D> points, double radius) {
 		double[] radii = new double[points.size()];
