@@ -21,6 +21,10 @@ public final class SteinerTreeApproximation {
 	
 	private static class MetricClosureEdge<T_Edge> extends DefaultWeightedEdge {
 
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 2650903858165369784L;
 		private final LinkedList<T_Edge> path = new LinkedList<T_Edge>();
 				
 		public MetricClosureEdge(List<T_Edge> _path) {

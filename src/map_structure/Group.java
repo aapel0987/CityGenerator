@@ -4,6 +4,7 @@ import java.awt.Shape;
 import java.awt.geom.Area;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 
 import area_constructors.Constructor;
@@ -82,5 +83,23 @@ public class Group implements Generateable {
 
 	public Group blockingArea(Constructor c){
 		return constructor.blockingArea(c, this);
+	}
+
+	public Group getGroupByConstructor(Constructor constructor) {
+		return getGroupsByConstructor(constructor).get(0);
+	}
+	
+	public List<Group> getGroupsByConstructor(Constructor constructor) {
+		LinkedList<Group> groups = new LinkedList<Group>();
+		if(this.constructor.equals(constructor)){
+			groups.add(this);
+		} else for(Generateable member : members.values()) if(member instanceof Group){
+			groups.addAll(((Group)member).getGroupsByConstructor(constructor));
+		}
+		return groups;
+	}
+
+	public void clear() {
+		members.clear();
 	}
 }

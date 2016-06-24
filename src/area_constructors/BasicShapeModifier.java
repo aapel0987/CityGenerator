@@ -1,16 +1,9 @@
 package area_constructors;
 
 import java.awt.geom.Area;
-import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
 import java.awt.geom.PathIterator;
 import java.awt.geom.Point2D;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-
-import test.TestGUIManager;
 
 final public class BasicShapeModifier {
 

@@ -38,6 +38,15 @@ public abstract class Constructor {
 		return toReturn;
 	}
 	
+
+	protected static double getRandomUniform(double max){
+		return getRandomUniform(0,max);
+	}
+	
+	protected static double getRandomUniform(double min, double max){
+		return random.nextDouble()*(max-min) + min;
+	}
+	
 	protected static double getRandomNormal(double maximum){
 		return getRandomNormal(0,maximum);
 	}

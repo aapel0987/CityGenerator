@@ -4,11 +4,9 @@ import java.awt.Rectangle;
 import java.awt.geom.Area;
 import java.awt.geom.Point2D;
 
-import map_structure.Generateable;
 import map_structure.Group;
 import map_structure.AreaLayer;
 import materials.Material;
-import materials.MaterialPoint;
 import materials.MaterialsCollection;
 
 public class BasicForestConstructor extends Constructor {
@@ -19,7 +17,7 @@ public class BasicForestConstructor extends Constructor {
 	private double targetRatio; 
 	private int count;
 	
-	public BasicForestConstructor(Area a, double t, double r, int c){
+	public BasicForestConstructor(double t, double r, int c){
 		coverageTarget = t;
 		targetRatio = r;
 		count = c;
@@ -36,35 +34,15 @@ public class BasicForestConstructor extends Constructor {
 		AreaLayer trees = new AreaLayer(tree);
 		int iterations = count;
 		while(iterations-- > 0){
-			trees.add(ConstructComplexForestArea(routeableArea));
+			//Create squares
+			Area forestArea = BasicShapeConstructor.ConstructComplexConnectedSquares(routeableArea,coverageTarget,targetRatio);
+			//Apply Distortion
+			forestArea = BasicShapeModifier.distortArea(forestArea,10,10,5);
+			forestArea.intersect(routeableArea);
+			trees.add(forestArea);
 		}
 		forest.add("trees", trees);
 		return forest;
-	}
-	
-	private Area ConstructComplexForestArea(Area routeableArea){
-		Area forestArea = new Area();
-		Rectangle bounds = routeableArea.getBounds();
-		double targetVolume = bounds.getHeight()*bounds.getWidth()*coverageTarget;
-		//Iterative process, get a random point, then get another random point, then fill with forest
-		Point2D previousPoint = getRandomPoint(bounds);
-		while(targetVolume > 0){
-			double ratioedVolume = Math.max(targetVolume*targetRatio,1);
-			double length = Math.sqrt(ratioedVolume/GOLDEN_RATIO);
-			Point2D nextPoint = BasicShapeModifier.pointRandomReposition(previousPoint, length);
-			double width = Math.random()*GOLDEN_RATIO*length;
-			//Beauty check
-			if(previousPoint.distance(nextPoint)/width < GOLDEN_RATIO && width/previousPoint.distance(nextPoint) < GOLDEN_RATIO){
-				forestArea.add(BasicShapeConstructor.connectPoints(previousPoint, width, nextPoint, width));
-				targetVolume -= width*previousPoint.distance(nextPoint)*0.5;
-				previousPoint = nextPoint;
-			}
-			//System.out.println("targetVolume: " + targetVolume+"\tratioedVolume: " + ratioedVolume);
-		}
-		//Apply Distortion
-		forestArea = BasicShapeModifier.distortArea(forestArea,10,10,5);
-		forestArea.intersect(routeableArea);
-		return forestArea;
 	}
 
 	public Group blockingArea(Constructor c, Group constructed) {

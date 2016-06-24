@@ -23,12 +23,17 @@ public class Packs {
 		HashMap<Material,ArrayList<MapItem>> materialAssociations = new HashMap<Material,ArrayList<MapItem>>();
 		//Pack Creation
 		TextureTree naturePack = parsePack("C:\\Users\\Alex\\Google Drive\\CodeProjects\\CityGenerator\\map_examples\\nature.rdm","Nature");
+		TextureTree favoritePack = parsePack("C:\\Users\\Alex\\Google Drive\\CodeProjects\\CityGenerator\\map_examples\\favorite.rdm","favorite");
 		//Association Setup
 		materialAssociations.put(MaterialsCollection.Sand,naturePack.getMapItem("terrain/grownd/", 5));
 		materialAssociations.put(MaterialsCollection.Water,naturePack.getMapItem("terrain/grownd/", 6));
 		materialAssociations.put(MaterialsCollection.Tree,buildCustomCollectionTrees(naturePack));
 		materialAssociations.put(MaterialsCollection.Brush,buildCustomCollectionScrubland(naturePack));
-		materialAssociations.put(MaterialsCollection.Grass,naturePack.getMapItem("floor/grass-open/", 1));
+		
+		materialAssociations.put(MaterialsCollection.Grass,favoritePack.getMapItem("floors/outdoor/", 5));
+		materialAssociations.put(MaterialsCollection.Stone,favoritePack.getMapItem("floors/outdoor/", 4));
+		materialAssociations.put(MaterialsCollection.GrassyStone,favoritePack.getMapItem("floors/outdoor/", 1));
+		materialAssociations.put(MaterialsCollection.MyddyGrass,favoritePack.getMapItem("floors/outdoor/", 1));
 		
 		return materialAssociations;
 	}

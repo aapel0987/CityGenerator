@@ -141,8 +141,12 @@ public abstract class PathConstructor extends Constructor {
 		private V startVertex;
 		private HashSet<V> vertexSet;
 		
-		protected ExtendedClosestFirstIterator(Graph<V, E> g, V _startVertex) {
-			super(g, _startVertex);
+		protected ExtendedClosestFirstIterator(Graph<V, E> g, V _startVertex){
+			this(g,_startVertex,Double.POSITIVE_INFINITY);
+		}
+		
+		protected ExtendedClosestFirstIterator(Graph<V, E> g, V _startVertex, double radius) {
+			super(g, _startVertex, radius);
 			vertexSet = new HashSet<V>();
 			startVertex = _startVertex;
 			vertexSet.add(startVertex);
@@ -186,10 +190,65 @@ public abstract class PathConstructor extends Constructor {
 			}
 			return vertexSet;
 		}
-		
+
+		public static <V, E> void evaluateAll(Iterable<ExtendedClosestFirstIterator<V, E>> iterators) {
+			final Iterator<ExtendedClosestFirstIterator<V, E>> iterator = iterators.iterator();
+			final Semaphore iterSem = new Semaphore(1);
+			Thread threads[] = new Thread[THREADCOUNT];
+			
+			for(int threadindex = 0; threadindex < THREADCOUNT; threadindex++){
+				threads[threadindex] = new Thread("evaluateAll_thread_" + threadindex){
+			        @Override
+			        public void run(){
+			        	ExtendedClosestFirstIterator<V, E> currentIter = null;
+			        	try {
+							iterSem.acquire();
+							if(iterator.hasNext()) currentIter = iterator.next();
+							iterSem.release();
+						} catch (InterruptedException e) {
+							System.err.println("No one should be interruppting this thread: " + this.getName());
+							System.err.flush();
+							System.exit(1);
+						}
+			        	while(currentIter != null){
+			        		currentIter.evaluate();
+							currentIter = null;
+				        	try {
+								iterSem.acquire();
+								if(iterator.hasNext()) currentIter = iterator.next();
+								iterSem.release();
+							} catch (InterruptedException e) {
+								System.err.println("No one should be interruppting this thread: " + this.getName());
+								System.err.flush();
+								System.exit(1);
+							}
+			        	}
+			        }
+			    };
+				threads[threadindex].start();
+			}
+			
+			for(int threadindex = 0; threadindex < THREADCOUNT; threadindex++){
+				try {
+					threads[threadindex].join();
+				} catch (InterruptedException e) {
+					System.err.println("No one should be interruppting this thread. annotateGraph()");
+					System.err.flush();
+					System.exit(1);
+				}
+			}
+		}
+
+		public Set<V> getVerticies() {
+			return vertexSet;
+		}
 	}
 	
 	private static class ConstructorContainer extends DefaultWeightedEdge{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -7469406552292482475L;
 		private Constructor constructor;
 		private ConstructorContainer(Constructor _constructor){
 			constructor = _constructor;
@@ -205,115 +264,237 @@ public abstract class PathConstructor extends Constructor {
 		// 3. Get the Shortest path options
 		DirectedMultigraph<Point2D, ConstructorContainer> shortestTree = steinerForestApproximation(container.graph,points);
 		// 4. Distort the path
-		shortestTree = iterativeDistortTree(container.graph,shortestTree,points,distortionFactor,distortionIterations);
+		shortestTree = distortGraph(container.graph,shortestTree,points,distortionFactor,distortionIterations);
 		// 5. Convert the path to a Pat2D
 		//Print Runtime
 		return graphToPath2D(shortestTree);
 	}
 	
-	private <V, E> DirectedMultigraph<V, E> iterativeDistortTree(
-			DirectedWeightedPseudograph<V, E> graph, DirectedMultigraph<V, E> tree, Collection<V> immobilePoints, double factor, int i) {
-		for(int iterations = 0; iterations < i; iterations++)
-			tree = distortGraph(graph,tree,immobilePoints,factor, i);
-		return tree;
-	}
-	
 	private <V, E> DirectedMultigraph<V, E> distortGraph(
 			DirectedWeightedPseudograph<V, E> graph, DirectedMultigraph<V, E> tree, Collection<V> immobilePoints, double factor, int recursionCount) {
 		
-		//Choose two points in tree
-		LinkedList<V> points = new LinkedList<V>(tree.vertexSet());
-		int sourceIndex = random.nextInt(points.size() -1);
-		ExtendedClosestFirstIterator<V,E> source = new ExtendedClosestFirstIterator<V,E>(tree,points.get(sourceIndex));
-		points = new LinkedList<V>(source.evaluate());
-		int targetIndex = random.nextInt(points.size() -1) +1;
-		V target = points.get(targetIndex);
-		//Get the current path between them
-		GraphPath<V,E> currentPath = source.getShortestPath(target);
+		TreeDistorter<V, E> treeDistorter = new TreeDistorter<V, E>(graph, tree, immobilePoints, factor, recursionCount);
+		Thread threads[] = new Thread[THREADCOUNT];
+		for(int threadindex = 0; threadindex < THREADCOUNT; threadindex++){
+			threads[threadindex] = new Thread(treeDistorter,"distortGraph_Thread_" + threadindex);
+			threads[threadindex].start();
+		}
 		
-		//At this point we need to decide on real set of points that have no branches between them
-		//It could be this pair, but it might not be. So we iterate over the path, looking for separating nodes
-		LinkedList<V> terminalVerticies = new LinkedList<V>();
-		for(E edge : currentPath.getEdgeList()){
-			V currentTarget = tree.getEdgeTarget(edge);
-			if(tree.inDegreeOf(currentTarget) + tree.outDegreeOf(currentTarget) > 2 || immobilePoints.contains(currentTarget)){
-				terminalVerticies.add(currentTarget);
+		for(int threadindex = 0; threadindex < THREADCOUNT; threadindex++){
+			try {
+				threads[threadindex].join();
+			} catch (InterruptedException e) {
+				System.err.println("No one should be interruppting this thread. distortGraph()");
+				System.err.flush();
+				System.exit(1);
 			}
 		}
-		terminalVerticies.add(target);
+		return treeDistorter.getDistortedResult();
+	}
+
+	private class TreeDistorter<V, E> implements Runnable{
 		
-		//Remove the previous path
-		tree.removeAllEdges(currentPath.getEdgeList());
+		DirectedWeightedPseudograph<V, E> graph;
+		Collection<V> immobilePoints;
+		double factor;
+		int recursionCount;
 		
-		//Now we have a list of options for starting and stopping the distortion, and we can distort between them
-		Iterator<V> vertexIterator = terminalVerticies.iterator();
-		V previousVertex = source.startVertex;
-		while(vertexIterator.hasNext()){
-			V nextVertex = vertexIterator.next();
-			GraphPath<V,E> newPath = __simpleDistortTree(graph, previousVertex,nextVertex,factor,recursionCount -1);
-			for(E newEdge : newPath.getEdgeList()){
-				V newSource = graph.getEdgeSource(newEdge);
-				V newTarget = graph.getEdgeTarget(newEdge);
-				tree.addVertex(newSource);
-				tree.addVertex(newTarget);
-				tree.addEdge(newSource, newTarget, newEdge);
+		Semaphore pathPairsSem;
+		LinkedList<PathPair> pathPairs;
+		
+		Semaphore distortedResultSem;
+		DirectedMultigraph<V, E> distortedResult;
+		
+		private void addPathPair(PathPair arg0){
+			try {
+				pathPairsSem.acquire();
+			} catch (InterruptedException e) {
+				System.err.println("No one should be interruppting this thread. addPathPairs()");
+				System.err.flush();
+				System.exit(1);
 			}
-			previousVertex = nextVertex;
+			pathPairs.addFirst(arg0);
+			pathPairsSem.release();
 		}
-
-		//Remove vertices with no edges
-		clearEmptyVerticies(tree);
 		
-		return tree;
-	}
+		private PathPair getNextPathPair(){
+			try {
+				pathPairsSem.acquire();
+			} catch (InterruptedException e) {
+				System.err.println("No one should be interruppting this thread. getNextPathPair()");
+				System.err.flush();
+				System.exit(1);
+			}
+			System.out.println("Got next Pair, count was: " + pathPairs.size());
+			PathPair nextPathPair = null;
+			if(!pathPairs.isEmpty()) nextPathPair = pathPairs.removeFirst();
+			pathPairsSem.release();
+			return nextPathPair;
+		}
+		
+		private class PathPair{
+			private ExtendedClosestFirstIterator<V,E> source;
+			private ExtendedClosestFirstIterator<V,E> target;
+			private int counter;
 
+			protected PathPair(ExtendedClosestFirstIterator<V,E> _source, ExtendedClosestFirstIterator<V,E> _target){
+				this(_source,_target,0);
+			}
+			
+			protected PathPair(ExtendedClosestFirstIterator<V,E> _source, ExtendedClosestFirstIterator<V,E> _target, int _counter){
+				source = _source;
+				target = _target;
+				counter = _counter;
+			}
+			
+			protected void split(double factor){
+				//Find all options for points within range
+				Set<V> sourceSet = source.getVerticies();
+				Set<V> targetSet = target.getVerticies();
+				double maxWeight = source.getShortestPathLength(target.startVertex) * (1+factor);
+				LinkedList<V> options = new LinkedList<V>();
+				for(V optionVertex : sourceSet){
+					if(targetSet.contains(optionVertex) && (source.getShortestPathLength(optionVertex) + target.getShortestPathLength(optionVertex) < maxWeight)){
+						options.add(optionVertex);
+					}
+				}
+				//Select one
+				if(options.size() == 0){
+					System.out.println("No options available:");
+					System.out.println("\tSource: " + source.startVertex);
+					System.out.println("\tTarget: " + target.startVertex);
+				}
+				V selectedOption = options.get(random.nextInt(options.size()));
+				//Create a new iterator for that point
+				ExtendedClosestFirstIterator<V,E> selectedOptionIter =
+						new ExtendedClosestFirstIterator<V,E>(source.getGraph(),selectedOption,
+								Math.max(source.getShortestPathLength(selectedOption), target.getShortestPathLength(selectedOption)) * (1+factor));
+				selectedOptionIter.evaluate();
+				//add two new pairs to the pool
+				System.out.println("Splitting: " + counter);
+				if(!source.startVertex.equals(selectedOptionIter.startVertex)) addPathPair(new PathPair(source,selectedOptionIter,counter +1));
+				if(!target.startVertex.equals(selectedOptionIter.startVertex)) addPathPair(new PathPair(selectedOptionIter,target,counter +1));
+			}
+			
+			protected int getCounter(){
+				return counter;
+			}
+			
+			protected GraphPath<V,E> getPath(){
+				return source.getShortestPath(target);
+			}
+		}
+		
+		protected DirectedMultigraph<V, E> getDistortedResult(){
+			return distortedResult;
+		}
+		
+		protected TreeDistorter(DirectedWeightedPseudograph<V, E> _graph, DirectedMultigraph<V, E> _tree, Collection<V> _immobilePoints, double _factor, int _recursionCount){
+			graph = _graph;
+			immobilePoints = _immobilePoints;
+			factor = _factor;
+			recursionCount = _recursionCount;
+			
+			pathPairsSem = new Semaphore(1);
+			pathPairs = getInitialPathPairs(_tree);
 
-	private <V,E> GraphPath<V,E> __simpleDistortTree(DirectedWeightedPseudograph<V, E> graph, V source, V target, double factor, int recursionCount) {
-		ExtendedClosestFirstIterator<V,E> sourceIter = new ExtendedClosestFirstIterator<V,E>(graph,source);
-		sourceIter.evaluate();
-		return __simpleDistortTree(graph,sourceIter,target,factor,recursionCount);
-	}
-
-	private <V,E> GraphPath<V,E> __simpleDistortTree(DirectedWeightedPseudograph<V, E> graph, ExtendedClosestFirstIterator<V,E> sourceIter, V target, double factor, int recursionCount) {
-		ExtendedClosestFirstIterator<V,E> targetIter = new ExtendedClosestFirstIterator<V,E>(graph,target);
-		targetIter.evaluate();
-		return __simpleDistortTree(graph,sourceIter,targetIter,factor,recursionCount);
+			distortedResultSem = new Semaphore(1);
+			distortedResult = new DirectedMultigraph<V, E>((Class) null);
+		}
+		
+		private LinkedList<TreeDistorter<V, E>.PathPair> getInitialPathPairs(DirectedMultigraph<V, E> tree) {
+			//Add in immobile points as needed
+			HashSet<V> localImmobilePoints = new HashSet<V>(immobilePoints);
+			for(V vertex : tree.vertexSet()){
+				if((tree.inDegreeOf(vertex) != 1 || tree.outDegreeOf(vertex) != 1) && !localImmobilePoints.contains(vertex)){
+					localImmobilePoints.add(vertex);
+				}
+			}
+			//Create pairs based on outgoing degree and what is reachable
+			//This works because we assume the following
+			//1) The graph is directed, as implied by type
+			//2) The graph has no loops, as implied by type
+			//Therefore All nodes with an outgoing edge of odd degree must have a path to a node with odd degree
+			HashMap<V,Double> largestWeights = new HashMap<V,Double>();
+			HashMap<V,LinkedList<V>> targetVerticies = new HashMap<V,LinkedList<V>>();
+			for(V immobileVertex : localImmobilePoints){
+				largestWeights.put(immobileVertex, (double) 0);
+				targetVerticies.put(immobileVertex, new LinkedList<V>());
+			}
+			//Now find all pairs as verticies
+			for(V sourceVertex : localImmobilePoints){
+				System.out.println("Source: " + sourceVertex.toString());
+				System.out.println("\tOutgoingEdgeCount: " + tree.outgoingEdgesOf(sourceVertex));
+				for(E initialEdge : tree.outgoingEdgesOf(sourceVertex)){
+					V targetVertex = tree.getEdgeTarget(initialEdge);
+					double currentWeight = tree.getEdgeWeight(initialEdge);
+					while(!localImmobilePoints.contains(targetVertex)){
+						//Ummmmmmmm not sure this is the best, but it should work because all verticies with anything other than 1 outgoing edge are immobile
+						E nextEdge = tree.outgoingEdgesOf(targetVertex).iterator().next();
+						currentWeight += tree.getEdgeWeight(nextEdge);
+						targetVertex = tree.getEdgeTarget(nextEdge);
+					}
+					//Update maps
+					targetVerticies.get(sourceVertex).add(targetVertex);
+					if(largestWeights.get(sourceVertex) < currentWeight) largestWeights.put(sourceVertex, currentWeight);
+					if(largestWeights.get(targetVertex) < currentWeight) largestWeights.put(targetVertex, currentWeight);
+				}
+			}
+			//Create new iterators on the immobile points based on maximum weights, and update them
+			HashMap<V,ExtendedClosestFirstIterator<V,E>> newIterators = new HashMap<V,ExtendedClosestFirstIterator<V,E>>();
+			for(Entry<V, Double> entry : largestWeights.entrySet()){
+				newIterators.put(entry.getKey(), new ExtendedClosestFirstIterator<V,E>(graph, entry.getKey(), entry.getValue()));
+			}
+			ExtendedClosestFirstIterator.evaluateAll(newIterators.values());
+			//Lastly, create the initial pairs
+			LinkedList<PathPair> localPathPairs = new LinkedList<PathPair>();
+			for(Entry<V, LinkedList<V>> sourceEntry : targetVerticies.entrySet()){
+				for(V target : sourceEntry.getValue()){
+					localPathPairs.add(new PathPair(newIterators.get(sourceEntry.getKey()),newIterators.get(target)));
+				}
+			}
+			System.out.println("Initial Path Pairs: " + localPathPairs.size());
+			return localPathPairs;
+		}
+		
+		private void evaluatePathPairs(){
+			PathPair nextPathPair = getNextPathPair();
+			while(nextPathPair != null){
+				if(nextPathPair.getCounter() >= recursionCount){
+					GraphPath<V,E> path = nextPathPair.getPath();
+					try {
+						distortedResultSem.acquire();
+					} catch (InterruptedException e) {
+						System.err.println("No one should be interruppting this thread. getNextPathPair()");
+						System.err.flush();
+						System.exit(1);
+					}
+					//Add verticies and edges to the newly distorted tree
+					for(E edge : path.getEdgeList()){
+						V source = graph.getEdgeSource(edge);
+						V target = graph.getEdgeTarget(edge);
+						distortedResult.addVertex(source);
+						distortedResult.addVertex(target);
+						distortedResult.addEdge(source, target, edge);
+						distortedResult.setEdgeWeight(edge, path.getWeight());
+					}
+					
+					distortedResultSem.release();
+					System.out.println("Adding to Tree.");
+				} else {
+					nextPathPair.split(factor);
+				}
+				nextPathPair = getNextPathPair();
+			}
+		}
+		
+		@Override
+		public void run() {
+			evaluatePathPairs();
+		}
+		
 	}
 	
-	private <V,E> GraphPath<V,E> __simpleDistortTree(DirectedWeightedPseudograph<V, E> graph, V source, ExtendedClosestFirstIterator<V,E> targetIter, double factor, int recursionCount) {
-		ExtendedClosestFirstIterator<V,E> sourceIter = new ExtendedClosestFirstIterator<V,E>(graph,source);
-		sourceIter.evaluate();
-		return __simpleDistortTree(graph,sourceIter,targetIter,factor,recursionCount);
-	}
-	
-	private <V, E> GraphPath<V,E> __simpleDistortTree(DirectedWeightedPseudograph<V, E> graph, ExtendedClosestFirstIterator<V, E> source,
-			ExtendedClosestFirstIterator<V, E> target, double factor, int recursionCount) {
-		//Find the current path.
-		GraphPath<V,E> currentPath = source.getShortestPath(target);
-		
-		//Determine the new acceptable point set
-		double acceptableWeight = currentPath.getWeight() * (1+factor);
-		LinkedList<V> options = new LinkedList<V>();
-		for(V check : graph.vertexSet()){
-			double checkweight = source.getShortestPathLength(check);
-			checkweight += target.getShortestPathLength(check);
-			if(checkweight <= acceptableWeight) options.add(check);
-		}
-		//Select a point at random
-		V selectedOption = options.get(random.nextInt(options.size()));
-		GraphPath<V,E> firstHalfPath = null;
-		GraphPath<V,E> secondHalfPath = null;
-		if(recursionCount > 0){
-			firstHalfPath = __simpleDistortTree(graph,source,selectedOption,factor,recursionCount-1);
-			secondHalfPath = __simpleDistortTree(graph,selectedOption,target,factor,recursionCount-1);
-		} else {
-			firstHalfPath = source.getShortestPath(selectedOption);
-			ExtendedClosestFirstIterator<V,E> optionIter = new ExtendedClosestFirstIterator<V,E>(graph,selectedOption);
-			optionIter.evaluate();
-			secondHalfPath = optionIter.getShortestPath(target);
-		}
-		return __addPaths(firstHalfPath,secondHalfPath);
-	}
 
 	private <V, E> GraphPath<V, E> __addPaths(GraphPath<V, E> firstPath, GraphPath<V, E> secondPath) {
 		Graph<V,E> graph = firstPath.getGraph();
@@ -349,10 +530,8 @@ public abstract class PathConstructor extends Constructor {
 		for(V currentSource : points){
 			ExtendedClosestFirstIterator<V,E> newSourceIterator = new ExtendedClosestFirstIterator<V,E>(graph,currentSource);
 			sources.add(newSourceIterator);
-			while(newSourceIterator.hasNext()){
-				newSourceIterator.next();
-			}
 		}
+		ExtendedClosestFirstIterator.evaluateAll(sources);
 		return sources;
 	}
 	
@@ -508,7 +687,6 @@ public abstract class PathConstructor extends Constructor {
 		//As a rule the input arguments that are stored for local use cannot be modified, with the exception
 		//of the input graph being annotated.
 		LinkedList<Line2D> blockingLines;
-		LinkedList<LinkedList<Point2D>> allPoints;
 		PathConstructor parent;
 		double connectionDistance;
 		
@@ -521,6 +699,9 @@ public abstract class PathConstructor extends Constructor {
 
 		Semaphore remainingPointsSem;
 		LinkedList<LinkedList<Point2D>> remainingPoints;
+		
+		Semaphore rowAndNearestOptionsSem;
+		LinkedList<RowAndNearest> rowAndNearestOptions;
 		
 		private class PseudoEdge {
 			private Point2D source;
@@ -541,7 +722,6 @@ public abstract class PathConstructor extends Constructor {
 		public GraphAnnotator(LinkedList<Line2D> _blockingLines, LinkedList<LinkedList<Point2D>> _allPoints,
 				GraphContainer _graph, PathConstructor _parent, double _connectionDistance) {
 			blockingLines = _blockingLines;
-			allPoints = _allPoints;
 			graph = _graph;
 			parent = _parent;
 			connectionDistance = _connectionDistance;
@@ -549,17 +729,45 @@ public abstract class PathConstructor extends Constructor {
 			graphSem = new Semaphore(1);
 			edgeListSem = new Semaphore(1);
 			remainingPointsSem = new Semaphore(1);
+			rowAndNearestOptionsSem = new Semaphore(1);
 			edgeLists = new LinkedList<LinkedList<PseudoEdge>>();
-			remainingPoints = new LinkedList<LinkedList<Point2D>>(allPoints);
+			remainingPoints = new LinkedList<LinkedList<Point2D>>(_allPoints);
+			rowAndNearestOptions = new LinkedList<RowAndNearest>();
 		}
 
-		private LinkedList<Point2D> getNextRow(){
-			LinkedList<Point2D> nextRow = null;
+		private class RowAndNearest{
+			public LinkedList<Point2D> centerRow;
+			public LinkedHashMap<PeekableIterator<Point2D>,LinkedList<Point2D>> relavantPoints;
+			
+			public RowAndNearest(LinkedList<Point2D> _nextRow, LinkedList<LinkedList<Point2D>> possibleNeighbors){
+				centerRow = _nextRow;
+				relavantPoints = getNearest(possibleNeighbors);
+			}
+			
+			private LinkedHashMap<PeekableIterator<Point2D>,LinkedList<Point2D>> getNearest(LinkedList<LinkedList<Point2D>> possibleNeighbors){
+				LinkedHashMap<PeekableIterator<Point2D>,LinkedList<Point2D>> relavantPoints = new LinkedHashMap<PeekableIterator<Point2D>,LinkedList<Point2D>>();
+				for(LinkedList<Point2D> currentList : possibleNeighbors ){
+					//Distance on Y axis is sufficient for including in additional comparisons, otherwise the entire row can be discarded
+					if(!currentList.isEmpty()) {
+						if(Math.abs(currentList.peekFirst().getY() - centerRow.peekFirst().getY()) < connectionDistance){
+							relavantPoints.put(new PeekableIterator<Point2D>(currentList), new LinkedList<Point2D>());
+						} else if (!relavantPoints.isEmpty()) {
+							return relavantPoints;
+						}
+					}
+				}
+				return relavantPoints;
+			}
+		}
+		
+		private RowAndNearest getNextRow(){
+			RowAndNearest nextRow = null;
 			try {
 				remainingPointsSem.acquire();
 				while(!remainingPoints.isEmpty() && nextRow == null){
-					nextRow = remainingPoints.removeFirst();
-					if(nextRow.isEmpty()) nextRow = null;
+					LinkedList<Point2D> nextRowList = remainingPoints.removeFirst();
+					if(nextRowList.isEmpty()) nextRow = null;
+					else nextRow = new RowAndNearest(nextRowList,remainingPoints);
 				}
 				remainingPointsSem.release();
 			} catch (InterruptedException e) {
@@ -569,7 +777,7 @@ public abstract class PathConstructor extends Constructor {
 			}
 			return nextRow;
 		}
-		
+				
 		@Override
 		public void run() {
 			annotateGraph();
@@ -577,23 +785,16 @@ public abstract class PathConstructor extends Constructor {
 		
 		public void annotateGraph(){
 			//1. Determine which set of points on which we are operating
-			LinkedList<Point2D> currentRow = getNextRow();
+			RowAndNearest currentRow = getNextRow();
 			while(currentRow != null){		//Keep going until we cannot get another row
 				
 				//2. Determine All Points that could possibly interact with these points and get iterators for them
-				LinkedHashMap<PeekableIterator<Point2D>,LinkedList<Point2D>> relavantPoints = new LinkedHashMap<PeekableIterator<Point2D>,LinkedList<Point2D>>();
-				for(LinkedList<Point2D> currentList : allPoints ){
-					//Distance on Y axis is sufficient for including in additional comparisons, otherwise the entire row can be discarded
-					if(!currentList.isEmpty()) if(Math.abs(currentList.peekFirst().getY() - currentRow.peekFirst().getY()) < connectionDistance){
-						relavantPoints.put(new PeekableIterator<Point2D>(currentList), new LinkedList<Point2D>());
-					}
-				}
 				
 				//3. Determine a subset of all lines that could possibly interact with these point pairs
 				//Create a rectangle representing range of reach. This could include some invalid lines, but is cheap and easy
-				double xCoord = currentRow.peekFirst().getX() - connectionDistance;
-				double yCoord = currentRow.peekFirst().getY() + connectionDistance;
-				double width = (currentRow.peekLast().getX() - currentRow.peekFirst().getX()) + 2*connectionDistance;
+				double xCoord = currentRow.centerRow.peekFirst().getX() - connectionDistance;
+				double yCoord = currentRow.centerRow.peekFirst().getY() + connectionDistance;
+				double width = (currentRow.centerRow.peekLast().getX() - currentRow.centerRow.peekFirst().getX()) + 2*connectionDistance;
 				double height = 2*connectionDistance;
 				Rectangle2D bounds = new Rectangle2D.Double(xCoord, yCoord, width, height);
 				LinkedList<Line2D> blockingLinesSubset = new LinkedList<Line2D>();
@@ -603,8 +804,8 @@ public abstract class PathConstructor extends Constructor {
 				LinkedList<PseudoEdge> pseudoEdges = new LinkedList<PseudoEdge>();
 				
 				//Main Processing
-				for(Point2D currentPoint : currentRow){
-					Iterator<Entry<PeekableIterator<Point2D>, LinkedList<Point2D>>> iterListPairIterator = relavantPoints.entrySet().iterator();
+				for(Point2D currentPoint : currentRow.centerRow){
+					Iterator<Entry<PeekableIterator<Point2D>, LinkedList<Point2D>>> iterListPairIterator = currentRow.relavantPoints.entrySet().iterator();
 					while(iterListPairIterator.hasNext()){
 						Entry<PeekableIterator<Point2D>, LinkedList<Point2D>> iterListPair = iterListPairIterator.next();
 						PeekableIterator<Point2D> currentIter = iterListPair.getKey();

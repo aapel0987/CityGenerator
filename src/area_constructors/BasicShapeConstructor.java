@@ -1,6 +1,6 @@
 package area_constructors;
 
-import java.awt.Color;
+import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.geom.Area;
 import java.awt.geom.Ellipse2D;
@@ -15,12 +15,14 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import test.TestGUIManager;
+import map_structure.Group;
 
-final public class BasicShapeConstructor {
+final public class BasicShapeConstructor extends Constructor {
 
-	private final static int threadcount = 5;
+	private final static int THREADCOUNT = 5;
 	public final static double pointOnLineError = 0.1;
 	
 	public static Area basicConnectedCircles(List<Point2D> points, double radius) {
@@ -119,6 +121,33 @@ final public class BasicShapeConstructor {
 		return new Area(new Ellipse2D.Double(center.getX() - radius, center.getY() - radius, 2*radius, 2*radius));
 	}
 	
+	public static Area ConstructComplexConnectedSquares(Area routeableArea, double coverageTarget, double targetRatio){
+		return ConstructComplexConnectedSquares(routeableArea,coverageTarget,targetRatio,Integer.MAX_VALUE);
+	}
+	
+	public static Area ConstructComplexConnectedSquares(Area routeableArea, double coverageTarget, double targetRatio, int maxIterations){
+		Area connectedSquares = new Area();
+		Rectangle bounds = routeableArea.getBounds();
+		double targetVolume = bounds.getHeight()*bounds.getWidth()*coverageTarget;
+		//Iterative process, get a random point, then get another random point, then fill with forest
+		Point2D previousPoint = getRandomPoint(bounds);
+		while(targetVolume > 0 && maxIterations-- > 0){
+			double ratioedVolume = Math.max(targetVolume*targetRatio,1);
+			double length = Math.sqrt(ratioedVolume/GOLDEN_RATIO);
+			Point2D nextPoint = BasicShapeModifier.pointRandomReposition(previousPoint, length);
+			double width = Math.random()*GOLDEN_RATIO*length;
+			//Beauty check
+			if(previousPoint.distance(nextPoint)/width < GOLDEN_RATIO && width/previousPoint.distance(nextPoint) < GOLDEN_RATIO){
+				connectedSquares.add(BasicShapeConstructor.connectPoints(previousPoint, width, nextPoint, width));
+				targetVolume -= width*previousPoint.distance(nextPoint)*0.5;
+				previousPoint = nextPoint;
+			}
+			//System.out.println("targetVolume: " + targetVolume+"\tratioedVolume: " + ratioedVolume);
+		}
+		connectedSquares.intersect(routeableArea);
+		return connectedSquares;
+	}
+	
 	public static Area connectPoints(List<Point2D> points, double widths[]){
 		//The format of the input array is assumed to be as follows
 		//For each element in the array there is a sub-array with three values:
@@ -198,25 +227,25 @@ final public class BasicShapeConstructor {
 	}
 	
 	public static Area combineAreasParallel(List<Area> areas){
-		if(areas.size() < threadcount){
+		if(areas.size() < THREADCOUNT){
 			return combineAreasRecursive(areas);
 		}
 		
-		final ArrayList<Area>[] partitionedAreas = (ArrayList<Area>[]) new ArrayList[threadcount];
+		final ArrayList<Area>[] partitionedAreas = (ArrayList<Area>[]) new ArrayList[THREADCOUNT];
 		int nextStartIndex = 0;
 		for(int index = 0; index < partitionedAreas.length -1; index++){		//Skip the last entry
-			int endIndex = nextStartIndex + areas.size()/threadcount;
+			int endIndex = nextStartIndex + areas.size()/THREADCOUNT;
 			partitionedAreas[index] = new ArrayList<Area>(areas.subList(nextStartIndex, endIndex));
 			nextStartIndex = endIndex;
 		}
 		//Handle Last Entry
-		partitionedAreas[threadcount -1] = new ArrayList<Area>(areas.subList(nextStartIndex, areas.size()));
-		final Area results[] = new Area[threadcount];
+		partitionedAreas[THREADCOUNT -1] = new ArrayList<Area>(areas.subList(nextStartIndex, areas.size()));
+		final Area results[] = new Area[THREADCOUNT];
 		//Now all of the areas have been partitioned. Launch Threads to merge
-		final CountDownLatch latch = new CountDownLatch(threadcount);
-		for(int threadIndex = 0; threadIndex < threadcount; threadIndex++){
+		final CountDownLatch latch = new CountDownLatch(THREADCOUNT);
+		for(int threadIndex = 0; threadIndex < THREADCOUNT; threadIndex++){
 			final int localThreadIndex = threadIndex;
-			Thread combiningThread = new Thread("UIHandler"){
+			Thread combiningThread = new Thread("combineAreasParallel_" + localThreadIndex){
 		        @Override
 		        public void run(){
 		        	results[localThreadIndex] = combineAreasRecursive(partitionedAreas[localThreadIndex]);
@@ -372,7 +401,7 @@ final public class BasicShapeConstructor {
 		Iterator<Path2D> pathsIter = paths.iterator();
 		if(pathsIter.hasNext()){
 			areaSegments.addAll(path2DToLines(pathsIter.next(),separation));
-			int index = 0;
+			//int index = 0;
 			//TestGUIManager gui = new TestGUIManager("getAreaLines: " + index++);
 			//gui.addLines(areaSegments,Color.black);
 			while(pathsIter.hasNext()){
@@ -399,25 +428,93 @@ final public class BasicShapeConstructor {
 	
 	public static List<Point2D> getPointsInArea(Area area, double separation){
 		Rectangle2D bounds = area.getBounds2D();
-		ArrayList<Point2D> internalPoints = new ArrayList<Point2D>();
-		double x1 = bounds.getMinX();
-		double x2 = bounds.getMaxX();
-		double y1 = bounds.getMinY();
-		double y2 = bounds.getMaxY();
-
+		final Semaphore masterListSem = new Semaphore(1);
+		final ArrayList<Point2D> internalPoints = new ArrayList<Point2D>();
+		final double finalSeparation = separation;
+		final Area finalArea = new Area(area);
 		//Fully Center the Proposed Grid on the Shape
-		x1 += ((x2-x1)%separation/((double) 2));
-		y1 += ((y2-y1)%separation/((double) 2));
+		final double x1 = bounds.getMinX() + ((bounds.getMaxX()-bounds.getMinX())%separation/((double) 2));
+		final double x2 = bounds.getMaxX();
+		final double y1 = bounds.getMinY() + ((bounds.getMaxY()-bounds.getMinY())%separation/((double) 2));
+		final double y2 = bounds.getMaxY();
 		
 		//Generate all the points in the bounds, check if it's in the area, and then add if it is
-		for(double currentY = y1; currentY <= y2; currentY += separation){
-			for(double currentX = x1; currentX <= x2; currentX += separation){
-				Point2D point = new Point2D.Double(currentX,currentY);
-				if(area.contains(point)){
-					internalPoints.add(point);
-				}
+		final Semaphore multiplierSem = new Semaphore(1);
+		final AtomicInteger currentYMult = new AtomicInteger(); 
+		Thread threads[] = new Thread[THREADCOUNT];
+		
+		for(int threadindex = 0; threadindex < THREADCOUNT; threadindex++){
+			threads[threadindex] = new Thread("getPointsInArea_thread_" + threadindex){
+		        @Override
+		        public void run(){
+		        	double localY = y1;
+		        	LinkedList<Point2D> localInternalPoints = new LinkedList<Point2D>();
+		        	try {
+						multiplierSem.acquire();
+						localY = y1 + (finalSeparation*currentYMult.getAndIncrement());
+						multiplierSem.release();
+					} catch (InterruptedException e) {
+						System.err.println("No one should be interruppting this thread: " + this.getName());
+						System.err.flush();
+						System.exit(1);
+					}
+		        	while(localY <= y2){
+		        		//Generate points on the X-Row
+		        		for(double currentX = x1; currentX <= x2; currentX += finalSeparation){
+		    				Point2D point = new Point2D.Double(currentX,localY);
+		    				if(finalArea.contains(point)){
+		    					localInternalPoints.add(point);
+		    				}
+		    			}
+		        		//Try to add the points to the master list
+		        		if(masterListSem.tryAcquire()){
+		        			internalPoints.addAll(localInternalPoints);
+		        			masterListSem.release();
+		        			localInternalPoints.clear();
+		        		}
+		        		
+		        		//Get the next y value
+			        	try {
+							multiplierSem.acquire();
+							localY = y1 + (finalSeparation*currentYMult.getAndIncrement());
+							multiplierSem.release();
+						} catch (InterruptedException e) {
+							System.err.println("No one should be interruppting this thread: " + this.getName());
+							System.err.flush();
+							System.exit(1);
+						}
+		        	}
+		        	
+		        	//Add any remaining points to the master list
+
+	        		//Try to add the points to the master list
+	        		if(!localInternalPoints.isEmpty()){
+	        			try {
+							masterListSem.acquire();
+						} catch (InterruptedException e) {
+							System.err.println("No one should be interruppting this thread: " + this.getName());
+							System.err.flush();
+							System.exit(1);
+						}
+	        			internalPoints.addAll(localInternalPoints);
+	        			masterListSem.release();
+	        		}
+		        }
+		    };
+			threads[threadindex].start();
+		}
+		
+		for(int threadindex = 0; threadindex < THREADCOUNT; threadindex++){
+			try {
+				threads[threadindex].join();
+			} catch (InterruptedException e) {
+				System.err.println("No one should be interruppting this thread. annotateGraph()");
+				System.err.flush();
+				System.exit(1);
 			}
 		}
+		
+		
 		
 		return internalPoints;
 	}
@@ -484,4 +581,16 @@ final public class BasicShapeConstructor {
 		        return new Point2D.Double((px+z*rx), (py+z*ry));
 			}
 	} // end intersection line-line
+
+	@Override
+	public Group blockingArea(Constructor c, Group constructed) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Group construct(Area routeableArea, Group currentMap) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

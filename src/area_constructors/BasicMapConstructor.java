@@ -3,7 +3,6 @@ package area_constructors;
 import java.awt.geom.Area;
 import java.awt.geom.Rectangle2D;
 
-import map_structure.Generateable;
 import map_structure.Group;
 import map_structure.AreaLayer;
 import materials.MaterialsCollection;
@@ -36,13 +35,15 @@ public class BasicMapConstructor extends Constructor {
 		AreaLayer mapBase = new AreaLayer(MaterialsCollection.Grass,routeableArea);
 		map.add("mapBase", mapBase);
 		//Phase 1: Add Large Rivers
-		map.add("large_rivers", (new BasicWaterConstructor(15)).construct(mapBase,map));
+		BasicWaterConstructor waterConstructor = new BasicWaterConstructor(15);
+		map.add("large_rivers", waterConstructor.construct(mapBase,map));
 		//Phase 2: Add Large Mountains
 		//Phase 3: Add Small Rivers and Lakes
+		waterConstructor.addLakes(mapBase, map, 4, 0.3, 0.5);
 		//Phase 4: Add Large Roads
 		//Phase 5: Add Urban Items
 		//Phase 6: Add Forests
-		map.add("forests",(new BasicForestConstructor(mapBase, 0.25, 0.05, 3)).construct(mapBase,map));
+		map.add("forests",(new BasicForestConstructor(0.25, 0.05, 3)).construct(mapBase,map));
 		//Phase 7: Add trees & ground cover
 		map.add("ground_cover",(new BasicFieldConstructor(0.01)).construct(mapBase, map));
 		//Phase 8: Crop the whole thing

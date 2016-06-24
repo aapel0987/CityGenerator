@@ -64,8 +64,8 @@ public class MainTestClass {
 		//TestPyromancersModel();
 		//TestPackConstructor();
 		//TestComplexRiverPath();
-		TestDefaultPathConstructor();
-		//TestMapConstructor();
+		//TestDefaultPathConstructor();
+		TestMapConstructor();
 		
 
 		final long endTime = System.currentTimeMillis();
@@ -91,7 +91,7 @@ public class MainTestClass {
 	private static void TestDefaultPathConstructor(){
 		TestGUIManager gui = new TestGUIManager("TestDefaultPathConstructor");
 		DefaultPathConstructor constructor = new DefaultPathConstructor();
-		double size = 150;//3500/5;
+		double size = 3500/5;
 		Area base = new Area(new Rectangle2D.Double(0, 0, size, size));
 		gui.addShape(base, Color.GREEN);
 		
@@ -111,12 +111,14 @@ public class MainTestClass {
 		routeableArea.subtract(blockers);
 		
 		int pointsToKeep = random.nextInt(6 -2 +1) +2;
-		ArrayList<Point2D> points = new ArrayList<Point2D>(BasicShapeConstructor.getAreaEdgePoints(routeableArea,0.01));
+		System.out.println("Initial Points: " + pointsToKeep);
+		ArrayList<Point2D> pointOptions = new ArrayList<Point2D>(BasicShapeConstructor.getAreaEdgePoints(routeableArea,0.01));
+		ArrayList<Point2D> selectedPoints = new ArrayList<Point2D>();
 		
-		while(points.size() > pointsToKeep) points.remove(random.nextInt(points.size()));
-		gui.addPoints(points, size * (0.25/15) , Color.DARK_GRAY);
+		while(selectedPoints.size() < pointsToKeep) selectedPoints.add(pointOptions.remove(random.nextInt(pointOptions.size())));
+		gui.addPoints(selectedPoints, size * (0.25/15) , Color.DARK_GRAY);
 
-		Path2D path = constructor.getPath(routeableArea, new Group("null", constructor), new HashSet<Point2D>(points), 1.0, 0.1, 8);
+		Path2D path = constructor.getPath(routeableArea, new Group("null", constructor), new HashSet<Point2D>(selectedPoints), 1.0, 0.1, 8);
 		
 		BasicStroke stroke = new BasicStroke((float) (size * (0.05/15)) );
 		gui.addShape(stroke.createStrokedShape(path), Color.BLACK);
