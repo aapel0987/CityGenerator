@@ -21,14 +21,14 @@ public class PointLayer extends Area implements Generateable {
 		this(mat,selectPointSubset(mat,density,area),area);
 	}
 
-	private static ArrayList<Point2D> selectPointSubset(MaterialPoint mat, double density, Area area){
+	private static LinkedList<Point2D> selectPointSubset(MaterialPoint mat, double density, Area area){
 		ArrayList<Point2D> allPoints = mat.getFillPoints(area);
 		int requiredPoints = (int) Math.ceil(allPoints.size()*density);
-		if(requiredPoints <= 0) allPoints.clear();
-		while(allPoints.size() > requiredPoints){
-			allPoints.remove(random.nextInt(allPoints.size()));
+		LinkedList<Point2D> selectedPoints = new LinkedList<Point2D>();
+		while(selectedPoints.size() < requiredPoints && !allPoints.isEmpty()){
+			selectedPoints.add(allPoints.remove(random.nextInt(allPoints.size())));
 		}
-		return allPoints;
+		return selectedPoints;
 	}
 	
 	public PointLayer(MaterialPoint mat, Collection<Point2D> _points, Area area){

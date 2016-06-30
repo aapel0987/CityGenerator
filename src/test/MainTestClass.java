@@ -85,7 +85,7 @@ public class MainTestClass {
 		
 		System.out.println("Writing to File");
 		String filename = "C:\\Users\\Alex\\Google Drive\\CodeProjects\\CityGenerator\\map_examples\\TestMapConstructor.rdm";
-		//PyromancersMapFactory.writeToFile(map, filename);;
+		PyromancersMapFactory.writeToFile(map, filename);;
 	}
 	
 	private static void TestDefaultPathConstructor(){
@@ -118,7 +118,7 @@ public class MainTestClass {
 		while(selectedPoints.size() < pointsToKeep) selectedPoints.add(pointOptions.remove(random.nextInt(pointOptions.size())));
 		gui.addPoints(selectedPoints, size * (0.25/15) , Color.DARK_GRAY);
 
-		Path2D path = constructor.getPath(routeableArea, new Group("null", constructor), new HashSet<Point2D>(selectedPoints), 1.0, 0.1, 8);
+		Path2D path = constructor.getPath(routeableArea, new Group("null", constructor), new HashSet<Point2D>(selectedPoints), new HashSet<Point2D>(), 1.0, 0.1, 8);
 		
 		BasicStroke stroke = new BasicStroke((float) (size * (0.05/15)) );
 		gui.addShape(stroke.createStrokedShape(path), Color.BLACK);
