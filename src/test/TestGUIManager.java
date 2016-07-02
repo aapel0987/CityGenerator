@@ -125,6 +125,11 @@ public class TestGUIManager {
     	}
     	
     	public void addShape(Shape s, Color c){
+    		if(s == null){
+    			System.err.println("Tried to add null object to paint!");
+    			Thread.dumpStack();
+    			return;
+    		}
     		try{
     			areasSemaphore.acquire();
     			areas.add(new shapeColorBundle( s, c));

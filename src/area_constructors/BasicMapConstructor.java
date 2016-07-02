@@ -31,22 +31,27 @@ public class BasicMapConstructor extends Constructor {
 	public Group createSimpleMap(Area routeableArea){
 		//Here Maps are built in phases
 		Group map = new Group("createSimpleMap",this);
-		//Phase 0: Create Base Map
+		System.out.println("Phase 0: Create Base Map");
 		AreaLayer mapBase = new AreaLayer(MaterialsCollection.Grass,routeableArea);
 		map.add("mapBase", mapBase);
-		//Phase 1: Add Large Rivers
-		BasicWaterConstructor waterConstructor = new BasicWaterConstructor(15);
-		map.add("large_rivers", waterConstructor.construct(mapBase,map));
-		//Phase 2: Add Large Mountains
-		//Phase 3: Add Small Rivers and Lakes
-		waterConstructor.addLakes(mapBase, map, 4, 0.3, 0.5);
-		//Phase 4: Add Large Roads
-		//Phase 5: Add Urban Items
-		//Phase 6: Add Forests
+		System.out.println("Phase 1: Add Large Rivers");
+		BasicWaterConstructor waterConstructor = new BasicWaterConstructor();
+		map.add("large_rivers", waterConstructor.getConstructedGroup());
+		waterConstructor.createComplexRiver(routeableArea, map, 15);
+		System.out.println("Phase 2: Add Large Mountains");
+		System.out.println("Phase 3: Add Small Rivers and Lakes");
+		//waterConstructor.addLakes(mapBase, map, 4, 0.3, 0.5);
+		//waterConstructor.connectWaterBodies(mapBase, map,4);
+		System.out.println("Phase 4: Add Large Roads");
+		BasicLineCrossingConstructor stoneBridgeConstructor = new BasicLineCrossingConstructor(2.5,MaterialsCollection.Stone,waterConstructor);
+		BasicRoadConstructor dirtRoadConstructor = new BasicRoadConstructor(2,MaterialsCollection.MuddyGrass,stoneBridgeConstructor);
+		map.add("large_roads", dirtRoadConstructor.construct(mapBase, map));
+		System.out.println("Phase 5: Add Urban Items");
+		System.out.println("Phase 6: Add Forests");
 		map.add("forests",(new BasicForestConstructor(0.25, 0.05, 3)).construct(mapBase,map));
-		//Phase 7: Add trees & ground cover
+		System.out.println("Phase 7: Add trees & ground cover");
 		map.add("ground_cover",(new BasicFieldConstructor(0.01)).construct(mapBase, map));
-		//Phase 8: Crop the whole thing
+		System.out.println("Phase 8: Crop the whole thing");
 		map.crop(mapBase);
 		return map;
 	}
@@ -56,10 +61,7 @@ public class BasicMapConstructor extends Constructor {
 	}
 	
 	public Group blockingArea(Constructor c, Group constructed) {
-		Group blockingArea = new Group("BasicMapConstructor_blockingArea",this);
-		blockingArea.add(this.conditionalGetBlockingArea("large_rivers", c, constructed));
-		blockingArea.add(this.conditionalGetBlockingArea("forests", c, constructed));
-		return blockingArea;
+		return constructed.getBlockingAreaOfAllMembers(c);
 	}
 
 }

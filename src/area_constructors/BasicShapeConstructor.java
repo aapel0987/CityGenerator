@@ -425,43 +425,57 @@ final public class BasicShapeConstructor extends Constructor {
 		return areaSegments;
 	}
 	
+	public static LinkedList<Point2D> getPointsInArea(Area area, Iterable<Point2D> points){
+		LinkedList<Point2D> pointsInArea = new LinkedList<Point2D>();
+		for(Point2D point : points){
+			if(area.contains(point)){
+				pointsInArea.add(point);
+			}
+		}
+		return pointsInArea;
+	}
 	
 	public static List<Point2D> getPointsInArea(Area area, double separation){
 		Rectangle2D bounds = area.getBounds2D();
 		final Semaphore masterListSem = new Semaphore(1);
 		final ArrayList<Point2D> internalPoints = new ArrayList<Point2D>();
 		final double finalSeparation = separation;
-		final Area finalArea = new Area(area);
+		final Area finalArea = new Area();
 		//Fully Center the Proposed Grid on the Shape
-		final double x1 = bounds.getMinX() + ((bounds.getMaxX()-bounds.getMinX())%separation/((double) 2));
-		final double x2 = bounds.getMaxX();
-		final double y1 = bounds.getMinY() + ((bounds.getMaxY()-bounds.getMinY())%separation/((double) 2));
-		final double y2 = bounds.getMaxY();
+		final Point2D upperLeft = new Point2D.Double();
+		final Point2D lowerRight = new Point2D.Double();
 		
 		//Generate all the points in the bounds, check if it's in the area, and then add if it is
 		final Semaphore multiplierSem = new Semaphore(1);
 		final AtomicInteger currentYMult = new AtomicInteger(); 
 		Thread threads[] = new Thread[THREADCOUNT];
 		
+		//Variables created that need cleanup and setting
+		internalPoints.clear();
+		finalArea.reset();
+		finalArea.add(area);
+		upperLeft.setLocation(bounds.getMinX() + ((bounds.getMaxX()-bounds.getMinX())%separation/((double) 2)), bounds.getMinY() + ((bounds.getMaxY()-bounds.getMinY())%separation/((double) 2)));
+		lowerRight.setLocation(bounds.getMaxX(), bounds.getMaxY());
+		
 		for(int threadindex = 0; threadindex < THREADCOUNT; threadindex++){
 			threads[threadindex] = new Thread("getPointsInArea_thread_" + threadindex){
 		        @Override
 		        public void run(){
-		        	double localY = y1;
+		        	float localY = (float) upperLeft.getY();
 		        	LinkedList<Point2D> localInternalPoints = new LinkedList<Point2D>();
 		        	try {
 						multiplierSem.acquire();
-						localY = y1 + (finalSeparation*currentYMult.getAndIncrement());
+						localY = (float) (upperLeft.getY() + (finalSeparation*currentYMult.getAndIncrement()));
 						multiplierSem.release();
 					} catch (InterruptedException e) {
 						System.err.println("No one should be interruppting this thread: " + this.getName());
 						System.err.flush();
 						System.exit(1);
 					}
-		        	while(localY <= y2){
+		        	while(localY <= lowerRight.getY()){
 		        		//Generate points on the X-Row
-		        		for(double currentX = x1; currentX <= x2; currentX += finalSeparation){
-		    				Point2D point = new Point2D.Double(currentX,localY);
+		        		for(float currentX = (float) upperLeft.getX(); currentX <= lowerRight.getX(); currentX += finalSeparation){
+		    				Point2D point = new Point2D.Float(currentX,localY);
 		    				if(finalArea.contains(point)){
 		    					localInternalPoints.add(point);
 		    				}
@@ -476,7 +490,7 @@ final public class BasicShapeConstructor extends Constructor {
 		        		//Get the next y value
 			        	try {
 							multiplierSem.acquire();
-							localY = y1 + (finalSeparation*currentYMult.getAndIncrement());
+							localY = (float) (upperLeft.getY() + (finalSeparation*currentYMult.getAndIncrement()));
 							multiplierSem.release();
 						} catch (InterruptedException e) {
 							System.err.println("No one should be interruppting this thread: " + this.getName());

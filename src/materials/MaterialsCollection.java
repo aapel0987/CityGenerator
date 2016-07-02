@@ -1,8 +1,6 @@
 package materials;
 
 import java.awt.Color;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 final public class MaterialsCollection {
 	
@@ -16,7 +14,7 @@ final public class MaterialsCollection {
 	final public static MaterialPoly Stone = new MaterialPoly(Color.GRAY);
 	final public static MaterialPoly Mud = new MaterialPoly(new Color((float)(51.0/256.0),(float)(25/256.0),(float)(0.0/256.0)));
 	final public static MaterialPoly GrassyStone = new MaterialPoly(new Color((float)(75.0/256.0),(float)(97/256.0),(float)(75.0/256.0)));
-	final public static MaterialPoly MyddyGrass = new MaterialPoly(new Color((float)(51.0/256.0),(float)(80/256.0),(float)0.0));
+	final public static MaterialPoly MuddyGrass = new MaterialPoly(new Color((float)(51.0/256.0),(float)(80/256.0),(float)0.0));
 		
 	private MaterialsCollection(){
 		

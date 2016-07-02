@@ -1,5 +1,6 @@
 package area_constructors;
 
+import java.awt.Color;
 import java.awt.Rectangle;
 import java.awt.geom.Area;
 import java.awt.geom.Point2D;
@@ -8,6 +9,7 @@ import map_structure.Group;
 import map_structure.AreaLayer;
 import materials.Material;
 import materials.MaterialsCollection;
+import test.TestGUIManager;
 
 public class BasicForestConstructor extends Constructor {
 
@@ -26,6 +28,9 @@ public class BasicForestConstructor extends Constructor {
 	public Group construct(Area routeableArea, Group currentMap) {
 		Area localRoutingArea = new Area(routeableArea);
 		localRoutingArea.subtract(currentMap.blockingArea(this).getArea());
+		/*TestGUIManager gui = new TestGUIManager("BasicForestConstructor_construct");
+		gui.addShape(routeableArea, Color.GREEN);
+		gui.addShape(currentMap.blockingArea(this).getArea(), Color.RED);*/
 		return ConstructComplexForest(localRoutingArea);
 	}
 	
@@ -42,6 +47,9 @@ public class BasicForestConstructor extends Constructor {
 			trees.add(forestArea);
 		}
 		forest.add("trees", trees);
+		/*TestGUIManager gui = new TestGUIManager("ConstructComplexForest");
+		gui.addShape(routeableArea, Color.GREEN);
+		gui.addShape(trees, Color.DARK_GRAY);*/
 		return forest;
 	}
 

@@ -17,20 +17,17 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
 
 import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
-import org.jgrapht.Graphs;
-import org.jgrapht.alg.FloydWarshallShortestPaths;
+import org.jgrapht.WeightedGraph;
 import org.jgrapht.graph.AbstractBaseGraph;
-import org.jgrapht.graph.AbstractGraph;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.DirectedMultigraph;
-import org.jgrapht.graph.DirectedWeightedMultigraph;
 import org.jgrapht.graph.DirectedWeightedPseudograph;
 import org.jgrapht.graph.GraphPathImpl;
+import org.jgrapht.graph.SimpleWeightedGraph;
 import org.jgrapht.traverse.ClosestFirstIterator;
 
 import map_structure.Group;
@@ -72,9 +69,9 @@ public abstract class PathConstructor extends Constructor {
 			this.addEdge(source, target, 1, constructor);
 		}
 		
-		public void addEdge(Point2D source, Point2D target, double weight, Constructor constructor){
-			this.__addEdge(source, target, weight, constructor);
-			this.__addEdge(target, source, weight, constructor);
+		public void addEdge(Point2D point0, Point2D point1, double weight, Constructor constructor){
+			this.__addEdge(point0, point1, weight, constructor);
+			this.__addEdge(point1, point0, weight, constructor);
 		}
 		
 		private void __addEdge(Point2D source, Point2D target, double weight, Constructor constructor){
@@ -123,6 +120,21 @@ public abstract class PathConstructor extends Constructor {
 			}
 			
 			return linkedList;
+		}
+
+		public LinkedList<Line2D> getEdgeLines() {
+			LinkedList<Line2D> edgeLines = new LinkedList<Line2D>();
+			HashSet<Point2D> coveredPoints = new HashSet<Point2D>();
+			for(Point2D sourceVertex : graph.vertexSet()){
+				for(ConstructorContainer outgoingEdge : graph.outgoingEdgesOf(sourceVertex)){
+					Point2D targetVertex = graph.getEdgeTarget(outgoingEdge);
+					if(!coveredPoints.contains(targetVertex)){
+						edgeLines.add(new Line2D.Double(sourceVertex, targetVertex));
+					}
+				}
+				coveredPoints.add(sourceVertex);
+			}
+			return edgeLines;
 		}
 	}
 	
@@ -244,10 +256,7 @@ public abstract class PathConstructor extends Constructor {
 		}
 	}
 	
-	private static class ConstructorContainer extends DefaultWeightedEdge{
-		/**
-		 * 
-		 */
+	static class ConstructorContainer extends DefaultWeightedEdge{
 		private static final long serialVersionUID = -7469406552292482475L;
 		private Constructor constructor;
 		private ConstructorContainer(Constructor _constructor){
@@ -255,23 +264,31 @@ public abstract class PathConstructor extends Constructor {
 		}
 	}
 	
-	public Path2D getPath(Area routeableArea, Group map, Collection<Point2D> points, double seperation, double distortionFactor, int distortionIterations){
-		// 1. Populate the Graph with points
-		GraphContainer container = new GraphContainer(vertexPopulateGraph(routeableArea,seperation),seperation);
-		container.addVerticies(points);
-		// 2. Annotate the Graph
-		annotateGraph(routeableArea,map,container);
-		// 3. Get the Shortest path options
-		DirectedMultigraph<Point2D, ConstructorContainer> shortestTree = steinerForestApproximation(container.graph,points);
-		// 4. Distort the path
-		shortestTree = distortGraph(container.graph,shortestTree,points,distortionFactor,distortionIterations);
-		// 5. Convert the path to a Pat2D
-		//Print Runtime
+	public Path2D getPath(Area routeableArea, Group map, Collection<Point2D> requiredPoints, Collection<Point2D> inGraphPoints, double seperation, double distortionFactor, int distortionIterations){
+		DirectedMultigraph<Point2D, ConstructorContainer> shortestTree = getShortestTree(routeableArea, map, requiredPoints, inGraphPoints, seperation, distortionFactor, distortionIterations);
 		return graphToPath2D(shortestTree);
 	}
 	
+	protected DirectedMultigraph<Point2D, ConstructorContainer> getShortestTree(Area routeableArea, Group map, Collection<Point2D> requiredPoints, double seperation, double distortionFactor, int distortionIterations){
+		return getShortestTree(routeableArea, map, requiredPoints, new LinkedList<Point2D>(), seperation, distortionFactor, distortionIterations);
+	}
+	
+	protected DirectedMultigraph<Point2D, ConstructorContainer> getShortestTree(Area routeableArea, Group map, Collection<Point2D> requiredPoints, Collection<Point2D> inGraphPoints, double seperation, double distortionFactor, int distortionIterations){
+		if(requiredPoints.size() < 2) throw new IllegalArgumentException("You cannot create a tree between less than two (2) points.");
+		GraphContainer container = new GraphContainer(vertexPopulateGraph(routeableArea,seperation),seperation);
+		container.addVerticies(requiredPoints);
+		container.addVerticies(inGraphPoints);
+		// 2. Annotate the Graph
+		annotateGraph(routeableArea,map,container);
+		// 3. Get the Shortest path options
+		DirectedMultigraph<Point2D, ConstructorContainer> shortestTree = steinerForestApproximation(container.graph,requiredPoints);
+		// 4. Distort the path
+		shortestTree = distortGraph(container.graph,shortestTree,requiredPoints,distortionFactor,distortionIterations);
+		return shortestTree;
+	}
+	
 	private <V, E> DirectedMultigraph<V, E> distortGraph(
-			DirectedWeightedPseudograph<V, E> graph, DirectedMultigraph<V, E> tree, Collection<V> immobilePoints, double factor, int recursionCount) {
+			WeightedGraph<V, E> graph, DirectedMultigraph<V, E> tree, Collection<V> immobilePoints, double factor, int recursionCount) {
 		
 		TreeDistorter<V, E> treeDistorter = new TreeDistorter<V, E>(graph, tree, immobilePoints, factor, recursionCount);
 		Thread threads[] = new Thread[THREADCOUNT];
@@ -294,7 +311,7 @@ public abstract class PathConstructor extends Constructor {
 
 	private class TreeDistorter<V, E> implements Runnable{
 		
-		DirectedWeightedPseudograph<V, E> graph;
+		WeightedGraph<V, E> graph;
 		Collection<V> immobilePoints;
 		double factor;
 		int recursionCount;
@@ -325,7 +342,7 @@ public abstract class PathConstructor extends Constructor {
 				System.err.flush();
 				System.exit(1);
 			}
-			System.out.println("Got next Pair, count was: " + pathPairs.size());
+			//System.out.println("Got next Pair, count was: " + pathPairs.size());
 			PathPair nextPathPair = null;
 			if(!pathPairs.isEmpty()) nextPathPair = pathPairs.removeFirst();
 			pathPairsSem.release();
@@ -371,7 +388,7 @@ public abstract class PathConstructor extends Constructor {
 								Math.max(source.getShortestPathLength(selectedOption), target.getShortestPathLength(selectedOption)) * (1+factor));
 				selectedOptionIter.evaluate();
 				//add two new pairs to the pool
-				System.out.println("Splitting: " + counter);
+				//System.out.println("Splitting: " + counter);
 				if(!source.startVertex.equals(selectedOptionIter.startVertex)) addPathPair(new PathPair(source,selectedOptionIter,counter +1));
 				if(!target.startVertex.equals(selectedOptionIter.startVertex)) addPathPair(new PathPair(selectedOptionIter,target,counter +1));
 			}
@@ -389,7 +406,7 @@ public abstract class PathConstructor extends Constructor {
 			return distortedResult;
 		}
 		
-		protected TreeDistorter(DirectedWeightedPseudograph<V, E> _graph, DirectedMultigraph<V, E> _tree, Collection<V> _immobilePoints, double _factor, int _recursionCount){
+		protected TreeDistorter(WeightedGraph<V, E> _graph, DirectedMultigraph<V, E> _tree, Collection<V> _immobilePoints, double _factor, int _recursionCount){
 			graph = _graph;
 			immobilePoints = _immobilePoints;
 			factor = _factor;
@@ -423,8 +440,8 @@ public abstract class PathConstructor extends Constructor {
 			}
 			//Now find all pairs as verticies
 			for(V sourceVertex : localImmobilePoints){
-				System.out.println("Source: " + sourceVertex.toString());
-				System.out.println("\tOutgoingEdgeCount: " + tree.outgoingEdgesOf(sourceVertex));
+				//System.out.println("Source: " + sourceVertex.toString());
+				//System.out.println("\tOutgoingEdgeCount: " + tree.outgoingEdgesOf(sourceVertex));
 				for(E initialEdge : tree.outgoingEdgesOf(sourceVertex)){
 					V targetVertex = tree.getEdgeTarget(initialEdge);
 					double currentWeight = tree.getEdgeWeight(initialEdge);
@@ -453,7 +470,7 @@ public abstract class PathConstructor extends Constructor {
 					localPathPairs.add(new PathPair(newIterators.get(sourceEntry.getKey()),newIterators.get(target)));
 				}
 			}
-			System.out.println("Initial Path Pairs: " + localPathPairs.size());
+			//System.out.println("Initial Path Pairs: " + localPathPairs.size());
 			return localPathPairs;
 		}
 		
@@ -480,7 +497,7 @@ public abstract class PathConstructor extends Constructor {
 					}
 					
 					distortedResultSem.release();
-					System.out.println("Adding to Tree.");
+					//System.out.println("Adding to Tree.");
 				} else {
 					nextPathPair.split(factor);
 				}
@@ -507,7 +524,7 @@ public abstract class PathConstructor extends Constructor {
 		return new GraphPathImpl<V,E>(graph,startVertex,endVertex,edges,weight);
 	}
 
-	private <V,E> V getGraphCenter(Collection<ExtendedClosestFirstIterator<V,E>> sources, DirectedWeightedPseudograph<V,E> graph){
+	private <V,E> V getGraphCenter(Collection<ExtendedClosestFirstIterator<V,E>> sources, WeightedGraph<V,E> graph){
 		V center = null;
 		double centerWeight = Double.MAX_VALUE;
 		for(V currentTarget : graph.vertexSet()){
@@ -525,7 +542,7 @@ public abstract class PathConstructor extends Constructor {
 		return center;
 	}
 	
-	private <V,E> List<ExtendedClosestFirstIterator<V,E>> createSources(DirectedWeightedPseudograph<V, E> graph, Collection<V> points){
+	private <V,E> List<ExtendedClosestFirstIterator<V,E>> createSources(WeightedGraph<V, E> graph, Collection<V> points){
 		LinkedList<ExtendedClosestFirstIterator<V,E>> sources = new LinkedList<ExtendedClosestFirstIterator<V,E>>();
 		for(V currentSource : points){
 			ExtendedClosestFirstIterator<V,E> newSourceIterator = new ExtendedClosestFirstIterator<V,E>(graph,currentSource);
@@ -535,7 +552,7 @@ public abstract class PathConstructor extends Constructor {
 		return sources;
 	}
 	
-	private <V,E> DirectedMultigraph<V, E> steinerForestApproximation(DirectedWeightedPseudograph<V, E> graph, Collection<V> points){
+	private <V,E> DirectedMultigraph<V, E> steinerForestApproximation(WeightedGraph<V, E> graph, Collection<V> points){
 		//Construct all required paths
 		List<ExtendedClosestFirstIterator<V,E>> sources = createSources(graph,points);
 
@@ -649,6 +666,19 @@ public abstract class PathConstructor extends Constructor {
 		return path;
 	}
 	
+	protected static Path2D graphToPath2D(AbstractBaseGraph<Point2D, ConstructorContainer> graph, Constructor constructor){
+		Path2D path = new Path2D.Double();
+		for(ConstructorContainer edge : graph.edgeSet()){
+			if(constructor == null || constructor.equals(edge.constructor)) {
+				Point2D source = graph.getEdgeSource(edge);
+				Point2D target = graph.getEdgeTarget(edge);
+				path.moveTo(source.getX(), source.getY());
+				path.lineTo(target.getX(), target.getY());
+			}
+		}
+		return path;
+	}
+	
 	protected DirectedWeightedPseudograph<Point2D, ConstructorContainer> vertexPopulateGraph(Area area ,double separation){
 		DirectedWeightedPseudograph<Point2D, ConstructorContainer> graph = new DirectedWeightedPseudograph<Point2D, ConstructorContainer>(ConstructorContainer.class);
 		for(Point2D point : BasicShapeConstructor.getPointsInArea(area,separation)){
@@ -662,8 +692,16 @@ public abstract class PathConstructor extends Constructor {
 	}
 	
 	protected void annotateGraph(Area routeableArea, Group map, GraphContainer graph, double connectRadius){
+		annotateGraph(routeableArea, map, graph, connectRadius, new LinkedList<Line2D>());
+	}
+	
+	protected void annotateGraph(Area routeableArea, Group map, GraphContainer graph, double connectRadius, Collection<Line2D> additionalBlockingLines){
 		LinkedList<Line2D> blockingLines = new LinkedList<Line2D>(BasicShapeConstructor.getAreaLines(routeableArea, BasicShapeConstructor.pointOnLineError, false));
+		blockingLines.addAll(additionalBlockingLines);
 		LinkedList<LinkedList<Point2D>> allPoints = graph.getVerticiesAs2DLinkedList(routeableArea);
+		int sum = 0;
+		for(LinkedList<Point2D> list : allPoints) sum += list.size();
+		System.err.println("Points in Area: " + sum);
 		GraphAnnotator annotator = new GraphAnnotator(blockingLines,allPoints,graph, this, connectRadius);
 		Thread threads[] = new Thread[THREADCOUNT];
 		for(int threadindex = 0; threadindex < THREADCOUNT; threadindex++){
@@ -699,10 +737,7 @@ public abstract class PathConstructor extends Constructor {
 
 		Semaphore remainingPointsSem;
 		LinkedList<LinkedList<Point2D>> remainingPoints;
-		
-		Semaphore rowAndNearestOptionsSem;
-		LinkedList<RowAndNearest> rowAndNearestOptions;
-		
+				
 		private class PseudoEdge {
 			private Point2D source;
 			private Point2D target;
@@ -729,10 +764,8 @@ public abstract class PathConstructor extends Constructor {
 			graphSem = new Semaphore(1);
 			edgeListSem = new Semaphore(1);
 			remainingPointsSem = new Semaphore(1);
-			rowAndNearestOptionsSem = new Semaphore(1);
 			edgeLists = new LinkedList<LinkedList<PseudoEdge>>();
 			remainingPoints = new LinkedList<LinkedList<Point2D>>(_allPoints);
-			rowAndNearestOptions = new LinkedList<RowAndNearest>();
 		}
 
 		private class RowAndNearest{

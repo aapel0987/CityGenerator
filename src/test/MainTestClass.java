@@ -76,7 +76,7 @@ public class MainTestClass {
 	private static void TestMapConstructor(){
 		
 		System.out.println("Building Map");
-		BasicMapConstructor mapConstructor = new BasicMapConstructor(150,100);
+		BasicMapConstructor mapConstructor = new BasicMapConstructor(75,75);
 		Group map = mapConstructor.constructMap();
 		
 		System.out.println("Rendering Preview");

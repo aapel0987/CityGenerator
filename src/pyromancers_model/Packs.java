@@ -33,7 +33,7 @@ public class Packs {
 		materialAssociations.put(MaterialsCollection.Grass,favoritePack.getMapItem("floors/outdoor/", 5));
 		materialAssociations.put(MaterialsCollection.Stone,favoritePack.getMapItem("floors/outdoor/", 4));
 		materialAssociations.put(MaterialsCollection.GrassyStone,favoritePack.getMapItem("floors/outdoor/", 1));
-		materialAssociations.put(MaterialsCollection.MyddyGrass,favoritePack.getMapItem("floors/outdoor/", 1));
+		materialAssociations.put(MaterialsCollection.MuddyGrass,favoritePack.getMapItem("floors/outdoor/", 1));
 		
 		return materialAssociations;
 	}

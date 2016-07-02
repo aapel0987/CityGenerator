@@ -3,6 +3,7 @@ package map_structure;
 import java.awt.Shape;
 import java.awt.geom.Area;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -82,9 +83,19 @@ public class Group implements Generateable {
 	}
 
 	public Group blockingArea(Constructor c){
-		return constructor.blockingArea(c, this);
+		if(constructor != null)
+			return constructor.blockingArea(c, this);
+		return getBlockingAreaOfAllMembers(c);
 	}
 
+	public Group getBlockingAreaOfAllMembers(Constructor c){
+		Group blockingArea = new Group("Group_getBlockingAreaOfAllMembers",null);
+		for(Generateable member : members.values())
+			if(member instanceof Group)
+				blockingArea.add(((Group) member).blockingArea(c));
+		return blockingArea;
+	}
+	
 	public Group getGroupByConstructor(Constructor constructor) {
 		return getGroupsByConstructor(constructor).get(0);
 	}
@@ -95,6 +106,22 @@ public class Group implements Generateable {
 			groups.add(this);
 		} else for(Generateable member : members.values()) if(member instanceof Group){
 			groups.addAll(((Group)member).getGroupsByConstructor(constructor));
+		}
+		return groups;
+	}
+	
+	public List<Group> removeGroupsByConstructor(Constructor constructor) {
+		LinkedList<Group> groups = new LinkedList<Group>();
+		Iterator<Generateable> memberIter = members.values().iterator();
+		while(memberIter.hasNext()){
+			Generateable member = memberIter.next();
+			if(member instanceof Group) {
+				Group group = (Group) member;
+				if(group.constructor.equals(constructor)){
+					memberIter.remove();
+					groups.add(group);
+				}
+			}
 		}
 		return groups;
 	}
